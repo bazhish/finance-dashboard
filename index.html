@@ -1,65 +1,72 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
     <meta charset="UTF-8">
-    <title>Meu Controle Financeiro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle Financeiro</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<header>
-    <h1>Controle Financeiro</h1>
-</header>
+    <div class="container">
 
-<section id="resumo">
-    <h2>Resumo</h2>
+        <header class="header">
+            <h1>Controle Financeiro</h1>
+            <p>Gerencie seu salário e seus gastos</p>
+        </header>
 
-    <p>Salário total: <span id="salarioTotal">0</span></p>
-    <p>Total gasto: <span id="gastoTotal">0</span></p>
-    <p>Saldo restante: <span id="saldoRestante">0</span></p>
-</section>
+        <section class="cards">
+            <div class="card">
+                <h3>Salário Total</h3>
+                <p id="salarioTotal">R$ 0</p>
+            </div>
 
-<section id="salario">
-    <h2>Adicionar salário</h2>
+            <div class="card">
+                <h3>Total Gasto</h3>
+                <p id="gastoTotal">R$ 0</p>
+            </div>
 
-    <input type="number" id="inputSalario" placeholder="Digite seu salário">
-    <button id="btnSalvarSalario">Salvar salário</button>
-</section>
+            <div class="card">
+                <h3>Saldo Restante</h3>
+                <p id="saldoRestante">R$ 0</p>
+            </div>
+        </section>
 
-<section id="gastos">
-    <h2>Adicionar gasto</h2>
+        <section class="painel formulario">
+            <h2>Adicionar salário</h2>
+            <input type="number" id="inputSalario" placeholder="Digite seu salário">
+            <button id="btnSalvarSalario">Salvar salário</button>
+        </section>
 
-    <input type="text" id="nomeGasto" placeholder="Nome do gasto">
+        <section class="painel formulario">
+            <h2>Adicionar gasto</h2>
+            <input type="text" id="nomeGasto" placeholder="Nome do gasto">
+            <input type="number" id="valorGasto" placeholder="Valor do gasto">
 
-    <input type="number" id="valorGasto" placeholder="Valor">
+            <select id="categoriaGasto">
+                <option>Alimentação</option>
+                <option>Transporte</option>
+                <option>Estudos</option>
+                <option>Lazer</option>
+                <option>Outros</option>
+            </select>
 
-    <select id="categoriaGasto">
-        <option>Alimentação</option>
-        <option>Transporte</option>
-        <option>Estudos</option>
-        <option>Lazer</option>
-        <option>Outros</option>
-    </select>
+            <button id="btnAdicionarGasto">Adicionar gasto</button>
+        </section>
 
-    <button id="btnAdicionarGasto">Adicionar</button>
+        <section class="painel lista">
+            <h2>Lista de gastos</h2>
+            <ul id="listaGastos"></ul>
+        </section>
 
-</section>
+        <section class="painel grafico">
+            <h2>Distribuição de gastos</h2>
+            <canvas id="graficoGastos"></canvas>
+        </section>
 
-<section>
-    <h2>Lista de gastos</h2>
-    <ul id="listaGastos"></ul>
-</section>
+    </div>
 
-<section>
-    <h2>Distribuição de gastos</h2>
-    <canvas id="graficoGastos"></canvas>
-</section>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script src="script.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>

@@ -85,41 +85,34 @@ btnAdicionarGasto.onclick = function(){
 
 }
 
-function atualizarLista(){
-
+function atualizarLista() {
     listaGastos.innerHTML = ""
 
-    gastos.forEach(function(g){
-
+    gastos.forEach(function(g) {
         let item = document.createElement("li")
 
         item.innerHTML = `
-            ${g.nome} - R$ ${g.valor}
+            <span>${g.nome} - ${g.categoria} - R$ ${g.valor.toFixed(2)}</span>
             <button onclick="removerGasto(${g.id})">❌</button>
         `
 
         listaGastos.appendChild(item)
-
     })
-
+}
 }
 
-function atualizarResumo(){
-
+function atualizarResumo() {
     let totalGastos = 0
 
-    gastos.forEach(function(g){
-
+    gastos.forEach(function(g) {
         totalGastos += g.valor
-
     })
 
     let saldo = salario - totalGastos
 
-    salarioTotal.innerText = salario
-    gastoTotal.innerText = totalGastos
-    saldoRestante.innerText = saldo
-
+    salarioTotal.innerText = `R$ ${salario.toFixed(2)}`
+    gastoTotal.innerText = `R$ ${totalGastos.toFixed(2)}`
+    saldoRestante.innerText = `R$ ${saldo.toFixed(2)}`
 }
 
 let grafico = new Chart(ctx, {
