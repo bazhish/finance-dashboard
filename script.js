@@ -99,7 +99,6 @@ function atualizarLista() {
         listaGastos.appendChild(item)
     })
 }
-}
 
 function atualizarResumo() {
     let totalGastos = 0
