@@ -95,6 +95,7 @@ body {
 .welcome-banner p {
   font-size: 0.95rem;
   color: rgba(255,255,255,0.75);
+
   max-width: 760px;
 }
 

@@ -1,24 +1,70 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name = "description" content= "Ritmo financeiro é uma aplicação web que permite aos usuários
+    <meta name="description" content="Ritmo financeiro é uma aplicação web que permite aos usuários
         gerenciar seu salário e seus gastos de forma eficiente. Com uma interface intuitiva, os usuários podem
         adicionar seu salário, registrar seus gastos diários e acompanhar o saldo restante. A aplicação
         também oferece uma visualização gráfica da distribuição dos gastos por categoria, 
         ajudando os usuários a entender melhor seus hábitos financeiros e tomar decisões 
         mais informadas para melhorar sua saúde financeira.">
-    <meta name - keywords content = "controle financeiro, gerenciamento de gastos, orçamento pessoal, finanças pessoais, aplicação web">
+    <meta name - keywords
+        content="controle financeiro, gerenciamento de gastos, orçamento pessoal, finanças pessoais, aplicação web">
     <link rel="stylesheet" href="style.css">
     <title>Controle Financeiro</title>
 </head>
 
 <body>
-    <div class="fundo-fixo"></div>
+    <div class="page-bg"></div>
 
-    <section class="logo">
-        <div class="assinatura">Criado por Bazhish</div>
+    <section class="hero">
+        <div class="hero-badge">Criado por Bazhish</div>
         <h1>Ritmo <span>Financeiro</span></h1>
     </section>
+
+    <main class="dashboard-shell">
+
+        <section class="welcome-banner">
+            <div>
+                <h2>Bem vindo! aqui você poderá genrenciar todo seu fluxo de caixa.</h2>
+                <p>Este site é dedicado ao controle financeiro pessoal, para que você possa acompanhar e organizar
+                    melhor suas finanças.</p>
+            </div>
+            <button>
+                x
+            </button>
+        </section>
+
+        <section class="dashboard-card">
+            <header class="topbar">
+                <div class="brand">Central</div>
+
+                <div class="topbar-right">
+
+                    <div class="search-box">
+                        <span class="search-icon"><img src="img/search.svg" width="23" height="23"></span>
+                        <input type="text" placeholder="Buscar" />
+                    </div>
+
+                    <div class="icon-btn">📅</div>
+                    <div class="icon-btn">🔔</div>
+                    <div class="icon-btn">💬</div>
+
+                    <div class="profile">
+                        <div class="avatar"><img src="img/no-logon-profile.svg" width="23" height="23"></div>
+                        <span>▾</span>
+                    </div>
+
+                </div>
+
+                <nav class="tabs">
+                    <a class="active" href="#">Overview</a>
+                    <a href="#">Transactions</a>
+                    <a href="#">Reports</a>
+                    <a href="#">Hire Bookkeeper</a>
+                </nav>
+            </header>
+    </main>
 </body>
