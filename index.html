@@ -13,67 +13,12 @@
     <link rel="stylesheet" href="style.css">
     <title>Controle Financeiro</title>
 </head>
+
 <body>
+    <div class="fundo-fixo"></div>
 
-    <div class="container">
-
-        <header class="header">
-            <p id="TituloLogo"><span style="color: white;">Ritmo</span> <span style="color: #6ed86e;">Financeiro</span></p>
-            <p id="TituloDescrição">Gerencie seu salário e seus gastos em um único lugar</p>
-        </header>
-
-        <section class="cards">
-            <div class="card">
-                <h3>Salário Total</h3>
-                <p id="salarioTotal">R$ 0</p>
-            </div>
-
-            <div class="card">
-                <h3>Total Gasto</h3>
-                <p id="gastoTotal">R$ 0</p>
-            </div>
-
-            <div class="card">
-                <h3>Saldo Restante</h3>
-                <p id="saldoRestante">R$ 0</p>
-            </div>
-        </section>
-
-        <section class="painel formulario">
-            <h2>Adicionar salário</h2>
-            <input type="number" id="inputSalario" placeholder="Digite seu salário">
-            <button id="btnSalvarSalario">Salvar salário</button>
-        </section>
-
-        <section class="painel formulario">
-            <h2>Adicionar gasto</h2>
-            <input type="text" id="nomeGasto" placeholder="Nome do gasto">
-            <input type="number" id="valorGasto" placeholder="Valor do gasto">
-
-            <select id="categoriaGasto">
-                <option>Alimentação</option>
-                <option>Transporte</option>
-                <option>Estudos</option>
-                <option>Lazer</option>
-                <option>Outros</option>
-            </select>
-
-            <button id="btnAdicionarGasto">Adicionar gasto</button>
-        </section>
-
-        <section class="painel lista">
-            <h2>Lista de gastos</h2>
-            <ul id="listaGastos"></ul>
-        </section>
-
-        <section class="painel grafico">
-            <h2>Distribuição de gastos</h2>
-            <canvas id="graficoGastos"></canvas>
-        </section>
-
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="script.js"></script>
+    <section class="logo">
+        <div class="assinatura">Criado por Bazhish</div>
+        <h1>Ritmo <span>Financeiro</span></h1>
+    </section>
 </body>
-</html>
