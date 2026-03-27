@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Metas Diárias | Ritmo Financeiro Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="metas.css" />
+</head>
+<body>
+  <div class="page-bg"></div>
+
+  <div class="page-shell">
+    <section class="hero">
+      <div>
+        <div class="badge">Meta diária de gastos</div>
+        <h1>Calendário de <span>metas</span></h1>
+        <p>Agora esse calendário não é enfeite. Ele lê as despesas reais do mês, compara com a meta diária e mostra onde você estourou.</p>
+      </div>
+
+      <div class="hero-actions">
+        <a class="ghost-btn" href="/">Voltar ao dashboard</a>
+      </div>
+    </section>
+
+    <section class="app-window">
+      <header class="window-topbar">
+        <div class="brand-area">
+          <span class="brand-dot"></span>
+          <div>
+            <strong>Ritmo Financeiro Pro</strong>
+            <p>Metas diárias conectadas ao backend.</p>
+          </div>
+        </div>
+
+        <div class="top-actions">
+          <input class="month-input" type="month" id="goalMonthPicker" />
+        </div>
+      </header>
+
+      <nav class="tabs">
+        <a href="/">Geral</a>
+        <a class="active" href="/metas">Metas diárias</a>
+      </nav>
+
+      <section class="goal-layout">
+        <article class="goal-card">
+          <div class="goal-card-header">
+            <div>
+              <h2>Calendário de meta de gastos</h2>
+              <p>Cada círculo representa o gasto do dia contra sua meta diária.</p>
+            </div>
+
+            <div class="goal-controls">
+              <label for="dailyGoalInput">Meta diária</label>
+              <div class="goal-input-wrap">
+                <span>R$</span>
+                <input id="dailyGoalInput" type="number" min="1" step="0.01" />
+              </div>
+              <button class="save-goal-btn" id="saveGoalBtn" type="button">Salvar meta</button>
+            </div>
+          </div>
+
+          <div class="weekdays">
+            <span>Dom</span>
+            <span>Seg</span>
+            <span>Ter</span>
+            <span>Qua</span>
+            <span>Qui</span>
+            <span>Sex</span>
+            <span>Sáb</span>
+          </div>
+
+          <div class="calendar-grid" id="calendarGrid"></div>
+
+          <div class="legend">
+            <span><i class="dot used"></i>Dentro da meta</span>
+            <span><i class="dot exceeded"></i>Acima da meta</span>
+            <span><i class="dot remaining"></i>Sem uso ou espaço restante</span>
+          </div>
+
+          <div class="today-panel">
+            <div class="today-info">
+              <p class="tiny-label">Dia selecionado</p>
+              <h3 id="selectedDateLabel">--</h3>
+              <p id="selectedDateDescription">Selecione um dia para ver o detalhamento.</p>
+            </div>
+
+            <div class="selected-metrics">
+              <div>
+                <span>Meta</span>
+                <strong id="selectedGoalValue">R$ 0,00</strong>
+              </div>
+              <div>
+                <span>Gasto</span>
+                <strong id="selectedSpentValue">R$ 0,00</strong>
+              </div>
+              <div>
+                <span>Restante</span>
+                <strong id="selectedRemainingValue">R$ 0,00</strong>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <aside class="summary-side">
+          <div class="side-card side-highlight">
+            <span class="small-eyebrow">Resumo</span>
+            <h3 id="goalSummaryTitle">0 dias dentro da meta</h3>
+            <p id="goalSummaryDescription">---</p>
+          </div>
+
+          <div class="side-card">
+            <span class="small-eyebrow">Últimos dias com gasto</span>
+            <div class="latest-list" id="latestDaysList"></div>
+          </div>
+        </aside>
+      </section>
+    </section>
+  </div>
+
+  <script src="metas.js"></script>
+</body>
+</html>

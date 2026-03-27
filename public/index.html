@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ritmo Financeiro Pro</title>
+  <meta name="description" content="Dashboard financeiro pessoal com controle de salário, gastos, cartões de crédito, parcelas e metas." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page-bg"></div>
+
+  <section class="hero">
+    <div class="hero-badge">Dashboard financeiro full stack</div>
+    <h1>Ritmo <span>Financeiro</span> Pro</h1>
+    <p class="hero-copy">A essência da sua primeira versão foi mantida: salário, gastos, saldo e gráfico. A diferença é que agora isso virou produto, com persistência real, cartões, parcelas, filtros e visual profissional.</p>
+  </section>
+
+  <main class="dashboard-shell">
+    <section class="welcome-banner">
+      <div>
+        <h2>Controle seu fluxo de caixa sem depender de planilha improvisada.</h2>
+        <p>Cadastre renda, despesas, cartões e compras parceladas. Acompanhe o mês, altere o tipo de gráfico e veja o impacto real de cada categoria.</p>
+      </div>
+      <button type="button" id="hideBannerBtn">×</button>
+    </section>
+
+    <section class="dashboard-card">
+      <header class="topbar">
+        <div class="brand-block">
+          <div class="brand">Central de Finanças</div>
+          <div class="current-month">
+            <label for="monthPicker">Mês analisado</label>
+            <input id="monthPicker" type="month" />
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <div class="search-box">
+            <span class="search-icon"><img src="img/search.svg" width="20" height="20" alt=""></span>
+            <input id="transactionSearch" type="text" placeholder="Buscar lançamento ou categoria" />
+          </div>
+
+          <div class="profile">
+            <div class="avatar"><img src="img/no-logon-profile.svg" width="23" height="23" alt=""></div>
+            <span>Max ▾</span>
+          </div>
+        </div>
+      </header>
+
+      <nav class="tabs">
+        <a class="active" href="/">Geral</a>
+        <a href="/metas">Metas diárias</a>
+      </nav>
+
+      <section class="kpi-grid">
+        <article class="kpi-card">
+          <span class="kpi-label">Salário base</span>
+          <strong class="kpi-value" id="salaryValue">R$ 0,00</strong>
+          <small class="kpi-foot">Valor fixo usado para compor o saldo do mês.</small>
+        </article>
+
+        <article class="kpi-card positive">
+          <span class="kpi-label">Entradas do mês</span>
+          <strong class="kpi-value" id="inflowValue">R$ 0,00</strong>
+          <small class="kpi-foot">Receitas extras além do salário base.</small>
+        </article>
+
+        <article class="kpi-card negative">
+          <span class="kpi-label">Saídas do mês</span>
+          <strong class="kpi-value" id="outflowValue">R$ 0,00</strong>
+          <small class="kpi-foot">Despesas totais do período selecionado.</small>
+        </article>
+
+        <article class="kpi-card balance">
+          <span class="kpi-label">Saldo projetado</span>
+          <strong class="kpi-value" id="balanceValue">R$ 0,00</strong>
+          <small class="kpi-foot">Salário + entradas - saídas.</small>
+        </article>
+      </section>
+
+      <section class="main-grid">
+        <div class="panel panel-dark">
+          <div class="panel-head">
+            <div>
+              <h3>Visão geral do mês</h3>
+              <p>Use a base da versão 1, mas com dados reais, persistência e leitura executiva.</p>
+            </div>
+            <div class="filters">
+              <label class="select-wrap">
+                <span>Tipo de gráfico</span>
+                <select id="chartTypeSelect">
+                  <option value="doughnut">Rosca</option>
+                  <option value="bar">Barras</option>
+                  <option value="pie">Pizza</option>
+                  <option value="polarArea">Polar</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="legend three">
+            <span><i class="dot green"></i>Entradas</span>
+            <span><i class="dot black"></i>Saídas</span>
+            <span><i class="dot hollow"></i>Saldo</span>
+          </div>
+
+          <div class="summary-cards">
+            <article class="summary-card inflow">
+              <div class="symbol">↙</div>
+              <div class="label">Entradas extras</div>
+              <div class="value" id="summaryInflow">R$ 0,00</div>
+            </article>
+
+            <article class="summary-card outflow">
+              <div class="symbol">↗</div>
+              <div class="label">Saídas</div>
+              <div class="value" id="summaryOutflow">R$ 0,00</div>
+            </article>
+
+            <article class="summary-card net">
+              <div class="symbol">↔</div>
+              <div class="label">Saldo</div>
+              <div class="value" id="summaryNet">R$ 0,00</div>
+            </article>
+          </div>
+
+          <div class="chart-shell">
+            <canvas id="categoryChart"></canvas>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h3>Fluxo mensal</h3>
+              <p>Últimos 6 meses, comparando entradas e saídas.</p>
+            </div>
+          </div>
+
+          <div class="chart-card trend-card">
+            <canvas id="trendChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <section class="bottom-grid">
+        <div class="panel">
+          <div class="panel-head simple">
+            <div>
+              <h3>Lançamentos</h3>
+              <p>Entradas, despesas normais e despesas no cartão.</p>
+            </div>
+          </div>
+
+          <div class="toolbar-inline">
+            <button class="action-btn" data-modal-target="salaryModal">Definir salário</button>
+            <button class="action-btn action-primary" data-modal-target="transactionModal">Novo lançamento</button>
+            <button class="action-btn" data-modal-target="categoryModal">Nova categoria</button>
+          </div>
+
+          <div class="transactions-list" id="transactionsList"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head simple">
+            <div>
+              <h3>Cartões de crédito</h3>
+              <p>Fatura, limite disponível e parcelas ativas.</p>
+            </div>
+          </div>
+
+          <div class="toolbar-inline">
+            <button class="action-btn" data-modal-target="cardModal">Novo cartão</button>
+            <button class="action-btn action-primary" data-modal-target="installmentModal">Compra parcelada</button>
+          </div>
+
+          <div class="cards-stack" id="cardsStack"></div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <div class="modal-backdrop hidden" id="modalBackdrop">
+    <div class="modal-window hidden" id="modalWindow">
+      <div class="modal-head">
+        <div>
+          <h3 id="modalTitle">Modal</h3>
+          <p id="modalSubtitle">Preencha os dados.</p>
+        </div>
+        <button class="close-btn" id="closeModalBtn" type="button">×</button>
+      </div>
+      <form class="modal-form" id="modalForm"></form>
+    </div>
+  </div>
+
+  <template id="salaryTemplate">
+    <label>
+      <span>Salário base mensal</span>
+      <input name="monthlyIncome" type="number" min="0" step="0.01" required />
+    </label>
+    <button class="submit-btn" type="submit">Salvar salário</button>
+  </template>
+
+  <template id="transactionTemplate">
+    <label>
+      <span>Título</span>
+      <input name="title" type="text" required />
+    </label>
+    <div class="grid-2">
+      <label>
+        <span>Valor</span>
+        <input name="amount" type="number" min="0.01" step="0.01" required />
+      </label>
+      <label>
+        <span>Data</span>
+        <input name="transactionDate" type="date" required />
+      </label>
+    </div>
+    <div class="grid-2">
+      <label>
+        <span>Tipo</span>
+        <select name="type" required>
+          <option value="expense">Despesa</option>
+          <option value="income">Entrada</option>
+        </select>
+      </label>
+      <label>
+        <span>Categoria</span>
+        <select name="categoryId" id="transactionCategorySelect"></select>
+      </label>
+    </div>
+    <div class="grid-2">
+      <label>
+        <span>Forma de pagamento</span>
+        <select name="paymentMethod">
+          <option value="pix">Pix</option>
+          <option value="débito">Débito</option>
+          <option value="crédito">Crédito</option>
+          <option value="boleto">Boleto</option>
+          <option value="transferência">Transferência</option>
+          <option value="dinheiro">Dinheiro</option>
+        </select>
+      </label>
+      <label>
+        <span>Cartão</span>
+        <select name="cardId" id="transactionCardSelect">
+          <option value="">Sem cartão</option>
+        </select>
+      </label>
+    </div>
+    <label>
+      <span>Observações</span>
+      <textarea name="notes" rows="3" placeholder="Opcional"></textarea>
+    </label>
+    <button class="submit-btn" type="submit">Salvar lançamento</button>
+  </template>
+
+  <template id="categoryTemplate">
+    <div class="grid-2">
+      <label>
+        <span>Nome da categoria</span>
+        <input name="name" type="text" required />
+      </label>
+      <label>
+        <span>Tipo</span>
+        <select name="type">
+          <option value="expense">Despesa</option>
+          <option value="income">Entrada</option>
+        </select>
+      </label>
+    </div>
+    <div class="grid-2">
+      <label>
+        <span>Cor</span>
+        <input name="color" type="color" value="#9be768" />
+      </label>
+      <label>
+        <span>Ícone</span>
+        <input name="icon" type="text" maxlength="3" value="●" />
+      </label>
+    </div>
+    <button class="submit-btn" type="submit">Criar categoria</button>
+  </template>
+
+  <template id="cardTemplate">
+    <label>
+      <span>Nome do cartão</span>
+      <input name="name" type="text" required />
+    </label>
+    <div class="grid-2">
+      <label>
+        <span>Bandeira</span>
+        <input name="brand" type="text" placeholder="Visa, Mastercard..." required />
+      </label>
+      <label>
+        <span>Final</span>
+        <input name="lastFour" type="text" maxlength="4" required />
+      </label>
+    </div>
+    <div class="grid-2">
+      <label>
+        <span>Limite</span>
+        <input name="creditLimit" type="number" min="0" step="0.01" required />
+      </label>
+      <label>
+        <span>Cor</span>
+        <input name="color" type="color" value="#171717" />
+      </label>
+    </div>
+    <div class="grid-2">
+      <label>
+        <span>Fechamento</span>
+        <input name="closingDay" type="number" min="1" max="31" value="7" required />
+      </label>
+      <label>
+        <span>Vencimento</span>
+        <input name="dueDay" type="number" min="1" max="31" value="14" required />
+      </label>
+    </div>
+    <button class="submit-btn" type="submit">Salvar cartão</button>
+  </template>
+
+  <template id="installmentTemplate">
+    <label>
+      <span>Descrição da compra</span>
+      <input name="title" type="text" required />
+    </label>
+    <div class="grid-2">
+      <label>
+        <span>Cartão</span>
+        <select name="cardId" id="installmentCardSelect" required></select>
+      </label>
+      <label>
+        <span>Categoria</span>
+        <select name="categoryId" id="installmentCategorySelect" required></select>
+      </label>
+    </div>
+    <div class="grid-2">
+      <label>
+        <span>Valor total</span>
+        <input name="totalAmount" type="number" min="0.01" step="0.01" required />
+      </label>
+      <label>
+        <span>Parcelas</span>
+        <input name="totalInstallments" type="number" min="2" max="24" value="2" required />
+      </label>
+    </div>
+    <label>
+      <span>Data da compra</span>
+      <input name="purchaseDate" type="date" required />
+    </label>
+    <label>
+      <span>Observações</span>
+      <textarea name="notes" rows="3" placeholder="Opcional"></textarea>
+    </label>
+    <button class="submit-btn" type="submit">Salvar compra parcelada</button>
+  </template>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
