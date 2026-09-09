@@ -67,7 +67,13 @@ jobs:
       - run: pip install bandit pip-audit
       - run: bandit -r app/ -ll -q
       # pip-audit substitui o safety check (CLI descontinuado) para auditoria de deps.
-      - run: pip-audit -r requirements.txt --strict
+      #
+      # PYSEC-2026-1325 (ecdsa 0.19.2, dependência transitiva de python-jose) é
+      # ignorada: não existe versão corrigida publicada e a falha é em operações
+      # ECDSA, enquanto os tokens aqui são assinados com HS256 (HMAC) — o caminho
+      # vulnerável nunca é executado. Reavaliar quando o ecdsa publicar correção,
+      # ou ao migrar de python-jose para PyJWT.
+      - run: pip-audit -r requirements.txt --strict --ignore-vuln PYSEC-2026-1325
 
   build-and-push:
     needs: [test, security-scan]

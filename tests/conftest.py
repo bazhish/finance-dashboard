@@ -10,7 +10,8 @@ from httpx import ASGITransport, AsyncClient
 os.environ.setdefault("JWT_SECRET_KEY", "test-secret-key-for-local-tests-32chars")
 os.environ.setdefault("ENVIRONMENT", "testing")
 
-from app.main import app, close_db_pool, db_cursor, init_db_pool, limiter  # noqa: E402
+from app.main import app, close_db_pool, connection, db_cursor, init_db_pool, limiter  # noqa: E402
+from migrate import run_migrations  # noqa: E402
 
 TEST_DB_URL = os.getenv("TEST_DATABASE_URL")
 requires_db = pytest.mark.skipif(not TEST_DB_URL, reason="TEST_DATABASE_URL is not configured")
@@ -22,14 +23,33 @@ def reset_rate_limits() -> None:
         storage.reset()
 
 
+@pytest.fixture(scope="session", autouse=True)
+def ensure_schema():
+    """Garante o schema antes de qualquer teste.
+
+    O `clean_db` abaixo é autouse e apaga tabelas mesmo em testes unitários; sem
+    isto, rodar só `tests/unit` com o banco configurado quebrava com
+    `relation "transactions" does not exist`, porque quem criava o schema era o
+    startup — e ele só roda para quem pede o fixture `test_app`.
+    """
+    if not TEST_DB_URL:
+        return
+    os.environ["DATABASE_URL"] = TEST_DB_URL
+    init_db_pool()
+    with connection() as conn:
+        run_migrations(conn)
+
+
 @pytest_asyncio.fixture(scope="session")
 async def test_app():
     if not TEST_DB_URL:
         pytest.skip("TEST_DATABASE_URL is not configured")
     os.environ["DATABASE_URL"] = TEST_DB_URL
-    await app.router.startup()
-    yield app
-    await app.router.shutdown()
+    # `router.startup()`/`router.shutdown()` foram removidos do Starlette; o
+    # lifespan_context é a forma atual de rodar o ciclo de vida (e é o que cria
+    # o schema, via run_migrations).
+    async with app.router.lifespan_context(app):
+        yield app
     close_db_pool()
 
 
@@ -41,7 +61,7 @@ async def client(test_app):
 
 
 @pytest_asyncio.fixture(autouse=True)
-async def clean_db():
+async def clean_db(ensure_schema):
     if not TEST_DB_URL:
         yield
         return

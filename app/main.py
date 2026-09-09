@@ -11,6 +11,7 @@ import re
 import secrets
 import time
 import uuid
+from contextlib import asynccontextmanager
 from contextvars import ContextVar
 from datetime import UTC, date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
@@ -205,7 +206,36 @@ if not settings.is_serverless:
     PROFILE_PHOTO_DIR.mkdir(parents=True, exist_ok=True)
 
 
-app = FastAPI(title="Trevo API", version="2.0.0")
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Ciclo de vida do processo.
+
+    Substitui os antigos `@app.on_event`, removidos nas versões novas do
+    Starlette — era por isso que a suíte quebrava com
+    `'APIRouter' object has no attribute 'startup'`.
+    """
+    global startup_time
+    startup_time = time.time()
+    logger.info("Starting Trevo")
+    # Serverless (Vercel) valida config e conecta por request; validar, abrir
+    # pool e migrar no cold start derrubaria a função inteira se faltasse env.
+    # Lá as migrations rodam via ensure_serverless_schema, no primeiro request.
+    if not settings.is_serverless:
+        validate_runtime_config()
+        init_db_pool()
+        with connection() as conn:
+            run_migrations(conn)
+        logger.info("Startup completed")
+    else:
+        logger.info("Serverless mode: skipping startup validation, pool and migrations")
+    try:
+        yield
+    finally:
+        logger.info("Shutting down Trevo")
+        close_db_pool()
+
+
+app = FastAPI(title="Trevo API", version="2.0.0", lifespan=lifespan)
 app.state.limiter = limiter
 if not settings.is_serverless:
     app.mount(PROFILE_PHOTO_URL_PREFIX, StaticFiles(directory=PROFILE_PHOTO_DIR), name="profile-photos")
@@ -405,30 +435,6 @@ def as_utc_datetime(value: Any) -> datetime | None:
     if value.tzinfo is None:
         return value.replace(tzinfo=UTC)
     return value.astimezone(UTC)
-
-
-@app.on_event("startup")
-def startup() -> None:
-    global startup_time
-    startup_time = time.time()
-    logger.info("Starting Trevo")
-    # Serverless (Vercel) validates config lazily per request and connects per
-    # request; running validation/pool/migrations at cold start would crash the
-    # entire function when env vars are absent. Migrations run at build/deploy time.
-    if settings.is_serverless:
-        logger.info("Serverless mode: skipping startup validation, pool and migrations")
-        return
-    validate_runtime_config()
-    init_db_pool()
-    with connection() as conn:
-        run_migrations(conn)
-    logger.info("Startup completed")
-
-
-@app.on_event("shutdown")
-def shutdown() -> None:
-    logger.info("Shutting down Trevo")
-    close_db_pool()
 
 
 def parse_import_date(value: Any) -> str:
