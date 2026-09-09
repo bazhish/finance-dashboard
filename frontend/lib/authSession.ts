@@ -1,8 +1,8 @@
-export const COOKIE_AUTH_TOKEN = "__pulsa_cookie_session__";
+export const COOKIE_AUTH_TOKEN = "__trevo_cookie_session__";
 
-const SESSION_HINT_KEY = "pulsa_session_active";
+const SESSION_HINT_KEY = "trevo_session_active";
 const LEGACY_SESSION_TOKEN_KEY = "rf_token";
-const LEGACY_LOCAL_TOKEN_KEY = "pulsa_token";
+const LEGACY_LOCAL_TOKEN_KEY = "trevo_token";
 
 export function rememberSession() {
   window.localStorage.setItem(SESSION_HINT_KEY, "1");

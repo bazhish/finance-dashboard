@@ -1,4 +1,4 @@
-import { CalendarClock, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarClock, ChevronLeft, ChevronRight } from "@/components/icons";
 import { IconButton } from "@/components/IconButton";
 
 type MonthPickerProps = {

@@ -11,7 +11,7 @@ Inclua: descrição, passos para reproduzir, impacto estimado e versão/commit a
 
 Responderemos em até **72 horas** com confirmação de recebimento. Correções críticas têm prioridade.
 
-## O que o Pulsar não coleta
+## O que o Trevo não coleta
 
 - Número completo de cartão, CVV ou senha bancária
 - Credenciais de internet banking

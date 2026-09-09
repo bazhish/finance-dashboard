@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { ArrowRight, FileUp, PlusCircle } from "lucide-react";
+import { ArrowRight, FileUp, PlusCircle } from "@/components/icons";
 import { FeedbackMessage } from "@/components/FeedbackMessage";
 import { MoneyInput } from "@/components/MoneyInput";
 import { OnboardingHint } from "@/components/OnboardingHint";

@@ -1,11 +1,11 @@
-<h1 align="center">Pulsa</h1>
+<h1 align="center">Trevo</h1>
 
 <p align="center">
-  <strong>finanças no ritmo certo</strong>
+  <strong>suas finanças com sorte e método</strong>
 </p>
 
 <p align="center">
-  Assistente financeiro pessoal mobile first para acompanhar o pulso do seu mês: salário, despesas, metas, orçamento, parcelas, importação CSV e relatórios.
+  Assistente financeiro pessoal mobile first: salário, despesas, metas, orçamento, parcelas, importação CSV e relatórios.
 </p>
 
 <p align="center">
@@ -40,6 +40,13 @@ Instruções para gerar screenshots: [docs/assets/README.md](docs/assets/README.
 - **Relatórios** — exportação CSV/PDF e resumo mensal
 - **Autenticação** — e-mail/senha e OAuth opcional (Google, GitHub, Facebook)
 
+## Identidade
+
+O trevo de quatro folhas dá o nome e a paleta: verdes da folha como base, dourado
+como acento. Tipografia em **Inter** (títulos e interface) e **Nunito** (texto
+corrido), ambas self-hosted em `frontend/app/fonts`. Ícones em **Font Awesome
+Free** renderizados em duotone por `frontend/components/icons.tsx`.
+
 ## Stack
 
 | Camada | Tecnologias |
@@ -52,7 +59,7 @@ Instruções para gerar screenshots: [docs/assets/README.md](docs/assets/README.
 ## Arquitetura (resumo)
 
 ```text
-pulsar/
+trevo/
 ├── app/              # API FastAPI (main.py + módulos core/shared/…)
 ├── frontend/         # Next.js App Router
 ├── migrations/       # SQL versionado
@@ -136,7 +143,7 @@ Leia [CONTRIBUTING.md](CONTRIBUTING.md) e [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.m
 
 ## Licença
 
-[MIT](LICENSE) — Copyright (c) 2025 Pulsa Contributors.
+[MIT](LICENSE) — Copyright (c) 2025 Trevo Contributors.
 
 ## Limites atuais
 

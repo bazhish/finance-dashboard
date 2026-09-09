@@ -1,6 +1,6 @@
 # Visão de produto
 
-Pulsa e um assistente financeiro pessoal mobile first para transformar registros soltos em decisoes simples.
+Trevo e um assistente financeiro pessoal mobile first para transformar registros soltos em decisoes simples.
 
 Perguntas principais:
 

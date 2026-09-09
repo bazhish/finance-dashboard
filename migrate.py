@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import os
 import logging
+import os
 from pathlib import Path
 
 import psycopg2
@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-logger = logging.getLogger("ritmo_financeiro_migrate")
+logger = logging.getLogger("trevo_migrate")
 BASE_DIR = Path(__file__).resolve().parent
 MIGRATIONS_DIR = BASE_DIR / "migrations"
 
@@ -200,19 +200,26 @@ def apply_versioned_migrations(conn) -> None:
             );
             """
         )
-        if not MIGRATIONS_DIR.exists():
-            conn.commit()
-            return
+    conn.commit()
 
-        for path in sorted(MIGRATIONS_DIR.glob("*.sql")):
-            version = path.stem
+    if not MIGRATIONS_DIR.exists():
+        return
+
+    for path in sorted(MIGRATIONS_DIR.glob("*.sql")):
+        version = path.stem
+        with conn.cursor() as cursor:
             cursor.execute("SELECT 1 FROM schema_migrations WHERE version = %s", (version,))
             if cursor.fetchone():
                 continue
             logger.info("Applying migration %s", path.name)
             cursor.execute(path.read_text(encoding="utf-8"))
-            cursor.execute("INSERT INTO schema_migrations (version) VALUES (%s)", (version,))
-    conn.commit()
+            cursor.execute(
+                "INSERT INTO schema_migrations (version) VALUES (%s) ON CONFLICT DO NOTHING",
+                (version,),
+            )
+        # Uma migration por transação: se a próxima falhar, o que já foi aplicado
+        # continua registrado e o retry recomeça do ponto certo.
+        conn.commit()
 
 
 def run_migrations(conn) -> None:
@@ -237,3 +244,23 @@ def migrate() -> None:
 if __name__ == "__main__":
     migrate()
     logger.info("Migra\u00e7\u00f5es aplicadas com sucesso.")
+
+
+# Advisory lock arbitrário, só para serializar migrations concorrentes.
+MIGRATION_LOCK_KEY = 8_154_223_907_441_100
+
+
+def run_migrations_locked(conn) -> None:
+    """Aplica as migrations segurando um advisory lock.
+
+    Em serverless várias instâncias podem acordar juntas; o lock garante que só
+    uma aplica por vez e as outras encontram tudo pronto.
+    """
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT pg_advisory_lock(%s)", (MIGRATION_LOCK_KEY,))
+    try:
+        run_migrations(conn)
+    finally:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT pg_advisory_unlock(%s)", (MIGRATION_LOCK_KEY,))
+        conn.commit()

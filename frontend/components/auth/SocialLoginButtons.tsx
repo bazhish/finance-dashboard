@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Github } from "lucide-react";
+import { Github } from "@/components/icons";
 import { api, type OAuthProviderKey, type OAuthProvidersResponse } from "@/lib/api";
 
 const providerLabels: Record<OAuthProviderKey, string> = {

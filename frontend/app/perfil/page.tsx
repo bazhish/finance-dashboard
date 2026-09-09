@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useCallback, useEffect, useRef, useState } from "react";
-import { Camera, Download, Mail, ShieldAlert, Trash2, Upload, UserRound, WalletCards } from "lucide-react";
+import { Camera, Download, Mail, ShieldAlert, Trash2, Upload, UserRound, WalletCards } from "@/components/icons";
 import { FeedbackMessage } from "@/components/FeedbackMessage";
 import { KpiCard } from "@/components/KpiCard";
 import { PageHeader } from "@/components/PageHeader";
@@ -42,7 +42,7 @@ function ProfilePhoto({ initials, name, preview }: { initials: string; name: str
   }
 
   return (
-    <span className="flex h-24 w-24 items-center justify-center rounded-app bg-gradient-to-br from-pulse to-plum text-2xl font-black text-white shadow-soft" aria-hidden>
+    <span className="flex h-24 w-24 items-center justify-center rounded-app bg-gradient-to-br from-leaf to-leaf-700 text-2xl font-black text-white shadow-soft" aria-hidden>
       {initials}
     </span>
   );
@@ -89,7 +89,7 @@ export default function PerfilPage() {
   useEffect(() => () => clearObjectPreview(), [clearObjectPreview]);
 
   function updateSidebarUser() {
-    window.dispatchEvent(new Event("pulsar:user-updated"));
+    window.dispatchEvent(new Event("trevo:user-updated"));
   }
 
   function selectPhoto(event: ChangeEvent<HTMLInputElement>) {
@@ -182,7 +182,7 @@ export default function PerfilPage() {
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = "pulsa-meus-dados.json";
+      anchor.download = "trevo-meus-dados.json";
       anchor.click();
       URL.revokeObjectURL(url);
       setMessage("Exportação gerada. Verifique seus downloads.");
@@ -228,7 +228,7 @@ export default function PerfilPage() {
             <div className="flex items-center gap-4">
               <ProfilePhoto initials={initials} name={displayName} preview={photoPreview} />
               <div className="min-w-0">
-                <p className="text-xs font-bold uppercase tracking-normal text-muted">Conta Pulsar</p>
+                <p className="text-xs font-bold uppercase tracking-normal text-muted">Conta Trevo</p>
                 <h2 className="truncate text-xl font-black text-ink">{displayName}</h2>
                 <p className="mt-1 flex items-center gap-2 text-sm text-muted">
                   <Mail size={15} aria-hidden />
@@ -255,7 +255,7 @@ export default function PerfilPage() {
           <SectionIntro
             title="Dados pessoais"
             description="Nome e foto usados para personalizar sua experiencia."
-            action={<Upload size={18} className="text-pulse" />}
+            action={<Upload size={18} className="text-leaf" />}
           />
           <input
             ref={fileInputRef}
@@ -281,7 +281,7 @@ export default function PerfilPage() {
           <SectionIntro
             title="Dados financeiros"
             description="Confira os numeros base usados no Resumo e ajuste o planejamento em uma tela dedicada."
-            action={<WalletCards size={18} className="text-pulse" />}
+            action={<WalletCards size={18} className="text-leaf" />}
           />
           <div className="grid gap-3 md:grid-cols-3">
             <KpiCard label="Salario" value={formatBRL(boot?.settings.monthly_income || 0)} />
@@ -310,15 +310,15 @@ export default function PerfilPage() {
           <SectionIntro
             title="Privacidade e dados (LGPD)"
             description="Você pode baixar todos os seus dados ou excluir permanentemente sua conta a qualquer momento."
-            action={<ShieldAlert size={18} className="text-pulse" />}
+            action={<ShieldAlert size={18} className="text-leaf" />}
           />
           <button className="btn-secondary" type="button" onClick={exportData}>
             <Download size={16} aria-hidden />
             Exportar meus dados (JSON)
           </button>
 
-          <form onSubmit={deleteAccount} className="mt-4 rounded-app border border-coral/40 bg-coral/5 p-3">
-            <p className="text-sm font-bold text-coral">Excluir conta</p>
+          <form onSubmit={deleteAccount} className="mt-4 rounded-app border border-danger/40 bg-danger/5 p-3">
+            <p className="text-sm font-bold text-danger">Excluir conta</p>
             <p className="mt-1 text-xs text-muted">
               Apaga permanentemente sua conta, transações, cartões, orçamentos e foto. Não é reversível.
             </p>
@@ -331,7 +331,7 @@ export default function PerfilPage() {
                 onChange={(event) => setDeletePassword(event.target.value)}
                 autoComplete="current-password"
               />
-              <button className="btn-secondary border-coral text-coral" type="submit" disabled={deleting}>
+              <button className="btn-secondary border-danger text-danger" type="submit" disabled={deleting}>
                 <Trash2 size={16} aria-hidden />
                 {deleting ? "Excluindo..." : "Excluir minha conta"}
               </button>

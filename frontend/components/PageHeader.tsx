@@ -1,14 +1,14 @@
 "use client";
 
 import type { ReactNode } from "react";
-import type { LucideIcon } from "lucide-react";
+import type { TrevoIcon } from "@/components/icons";
 import { HowItWorks } from "@/components/HowItWorks";
 
 type PageHeaderProps = {
   actions?: ReactNode;
   description?: ReactNode;
   helpText?: string;
-  icon?: LucideIcon;
+  icon?: TrevoIcon;
   media?: ReactNode;
   title: ReactNode;
 };
@@ -18,7 +18,7 @@ export function PageHeader({ actions, description, helpText, icon: Icon, media, 
     <header className="animate-rise-in mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex min-w-0 items-center gap-3">
         {media ? media : Icon ? (
-          <span className="theme-control flex h-11 w-11 shrink-0 items-center justify-center rounded-app border text-pulse shadow-soft transition hover:scale-105">
+          <span className="theme-control flex h-11 w-11 shrink-0 items-center justify-center rounded-app border text-leaf shadow-soft transition hover:scale-105">
             <Icon size={22} aria-hidden />
           </span>
         ) : null}

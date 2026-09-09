@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { Copy, PiggyBank, Plus } from "lucide-react";
+import { Copy, PiggyBank, Plus } from "@/components/icons";
 import { BudgetCategoryCard } from "@/components/BudgetCategoryCard";
 import { EmptyState } from "@/components/EmptyState";
 import { FeedbackMessage } from "@/components/FeedbackMessage";
@@ -88,7 +88,7 @@ export default function OrcamentoPage() {
         />
 
         <FirstTimeExplainer
-          storageKey="pulsar_seen_budget_intro"
+          storageKey="trevo_seen_budget_intro"
           title="Orçamento ajuda você a gastar melhor"
           description="Defina limites por categoria e o app avisa quando você está perto de gastar demais. Assim você mantém as despesas sob controle."
         />

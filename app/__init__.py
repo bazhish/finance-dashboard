@@ -1,2 +1,2 @@
-"""Ritmo Financeiro Pro backend package."""
+"""Trevo backend package."""
 

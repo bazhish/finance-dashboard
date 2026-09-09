@@ -19,11 +19,10 @@ from __future__ import annotations
 import logging
 import secrets
 from pathlib import Path
-from typing import Optional
 
 from app.core.config import settings
 
-logger = logging.getLogger("pulsar.storage")
+logger = logging.getLogger("trevo.storage")
 
 SUPABASE_REF_PREFIX = "supabase://"
 SIGNED_URL_TTL_SECONDS = 60 * 60
@@ -73,7 +72,7 @@ def store_avatar(user_id: str, content: bytes, extension: str, content_type: str
     return f"{PROFILE_PHOTO_URL_PREFIX}/{filename}"
 
 
-def resolve_avatar_url(ref: Optional[str]) -> Optional[str]:
+def resolve_avatar_url(ref: str | None) -> str | None:
     """Turn a stored reference into a browser-usable URL.
 
     External URLs and local disk paths pass through unchanged; Supabase refs are
@@ -95,7 +94,7 @@ def resolve_avatar_url(ref: Optional[str]) -> Optional[str]:
     return ref
 
 
-def remove_avatar(ref: Optional[str]) -> None:
+def remove_avatar(ref: str | None) -> None:
     """Best-effort removal of a stored avatar (used on replace and on erasure)."""
     if not ref or _is_external(ref):
         return

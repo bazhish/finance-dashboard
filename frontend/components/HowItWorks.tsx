@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { CircleHelp, X } from "lucide-react";
+import { CircleHelp, X } from "@/components/icons";
 import { IconButton } from "@/components/IconButton";
 import { useDelayedPresence } from "@/lib/useDelayedPresence";
 

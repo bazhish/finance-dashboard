@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, FileUp, PiggyBank, ReceiptText, TrendingUp } from "lucide-react";
+import { ArrowRight, FileUp, PiggyBank, ReceiptText, TrendingUp } from "@/components/icons";
 import type { Alert, Dashboard, Transaction } from "@/types/finance";
 
 type ActionRecommendationCardProps = {
@@ -62,7 +62,7 @@ export function ActionRecommendationCard({
     <section className="app-card interactive-card group p-4">
       <p className="text-xs font-bold uppercase tracking-normal text-muted">Próxima melhor ação</p>
       <div className="mt-3 flex items-start gap-3">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-app bg-gradient-to-br from-pulse/15 to-plum/15 text-plum shadow-sm transition group-hover:scale-105">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-app bg-gradient-to-br from-leaf/15 to-leaf-700/15 text-leaf-700 shadow-sm transition group-hover:scale-105">
           <Icon size={20} />
         </span>
         <div className="min-w-0">

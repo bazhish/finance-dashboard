@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus } from "@/components/icons";
 import { MoneyInput } from "@/components/MoneyInput";
 import { Select } from "@/components/Select";
 import { CreateCategoryDrawer, type CreateCategoryInput } from "@/components/CreateCategoryDrawer";
@@ -141,8 +141,8 @@ export function ExpenseForm({
                   onClick={() => onChange({ ...form, installments: 1 })}
                   className={`p-2 rounded-app border-2 text-sm font-semibold transition ${
                     (form.installments ?? 1) === 1
-                      ? "border-plum bg-plum/10 text-plum"
-                      : "border-line bg-surface hover:bg-pulse/10"
+                      ? "border-leaf-700 bg-leaf-700/10 text-leaf-700"
+                      : "border-line bg-surface hover:bg-leaf/10"
                   }`}
                 >
                   À vista
@@ -152,8 +152,8 @@ export function ExpenseForm({
                   onClick={() => onChange({ ...form, installments: 2 })}
                   className={`p-2 rounded-app border-2 text-sm font-semibold transition ${
                     (form.installments ?? 1) > 1
-                      ? "border-plum bg-plum/10 text-plum"
-                      : "border-line bg-surface hover:bg-pulse/10"
+                      ? "border-leaf-700 bg-leaf-700/10 text-leaf-700"
+                      : "border-line bg-surface hover:bg-leaf/10"
                   }`}
                 >
                   Parcelado

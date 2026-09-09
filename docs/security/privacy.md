@@ -2,7 +2,7 @@
 
 ## Dados tratados
 
-O Pulsa trata dados de conta e dados financeiros informados pelo usuario:
+O Trevo trata dados de conta e dados financeiros informados pelo usuario:
 
 - nome, e-mail, foto de perfil e preferencias;
 - salario/base mensal, metas, orcamentos e reserva;
@@ -40,7 +40,7 @@ por URL assinada de curta duracao — nunca publicas. Removidas na exclusao de c
 
 ## Encarregado (DPO)
 
-Contato do titular para exercicio de direitos: **privacidade@pulsa.app**. Versao vigente da
+Contato do titular para exercicio de direitos: **privacidade@trevo.app**. Versao vigente da
 politica exposta em `/privacidade` (frontend) e em `app/privacy/service.py` (`POLICY_VERSION`).
 
 ## Retencao

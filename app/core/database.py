@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Iterator, Optional
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -10,13 +10,13 @@ from psycopg2.pool import ThreadedConnectionPool
 
 from app.core.config import settings
 
-logger = logging.getLogger("pulsar.database")
+logger = logging.getLogger("trevo.database")
 
 # In container mode a process-wide pool is reused across requests. In serverless
 # mode (Vercel) there is no long-lived process to hold a pool, so each request
 # opens a short connection against the Supabase transaction pooler (port 6543)
 # and closes it. DATABASE_URL must point at the pooler when running on Vercel.
-_db_pool: Optional[ThreadedConnectionPool] = None
+_db_pool: ThreadedConnectionPool | None = None
 
 
 def get_database_url() -> str:
@@ -55,7 +55,7 @@ def storage_available() -> bool:
 
 
 @contextmanager
-def connection() -> Iterator["psycopg2.extensions.connection"]:
+def connection() -> Iterator[psycopg2.extensions.connection]:
     """Yield a raw connection (used by migrations and multi-statement work)."""
     if settings.is_serverless:
         conn = psycopg2.connect(get_database_url())

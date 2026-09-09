@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 
 
 def pad(value: int) -> str:
@@ -26,7 +26,7 @@ def format_month_label(month_key: str) -> str:
 
 
 def get_current_month() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m")
+    return datetime.now(UTC).strftime("%Y-%m")
 
 
 def get_month_range(month_key: str) -> tuple[str, str]:
@@ -39,3 +39,20 @@ def get_month_range(month_key: str) -> tuple[str, str]:
     start = date(year, month, 1)
     end = date(next_year, next_month, 1) - timedelta(days=1)
     return start.isoformat(), end.isoformat()
+
+
+def first_billing_month(purchase_date: str, closing_day: int | None) -> str:
+    """Fatura em que a compra cai, considerando o fechamento do cartão.
+
+    Compra feita no dia do fechamento ou antes entra na fatura do próprio mês;
+    depois dele, escorrega para a seguinte. Sem ``closing_day`` (compra avulsa,
+    sem cartão) o mês da compra é usado como está.
+    """
+    base_month = month_key_from_date(purchase_date)
+    if not closing_day:
+        return base_month
+    try:
+        purchase_day = int(purchase_date[8:10])
+    except (ValueError, IndexError):
+        return base_month
+    return add_months(base_month, 1) if purchase_day > int(closing_day) else base_month

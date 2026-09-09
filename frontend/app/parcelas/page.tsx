@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { Calculator, Plus, Trash2, TrendingUp } from "lucide-react";
+import { Calculator, Plus, Trash2, TrendingUp } from "@/components/icons";
 import { EmptyState } from "@/components/EmptyState";
 import { FeedbackMessage } from "@/components/FeedbackMessage";
 import { FirstTimeExplainer } from "@/components/FirstTimeExplainer";
@@ -115,13 +115,13 @@ export default function ParcelasPage() {
       <div className="mx-auto max-w-6xl px-4 py-5 sm:py-6">
         <PageHeader
           description="Simule e controle compras parceladas para entender o impacto no seu orçamento."
-          helpText="Simule e registre compras parceladas sem cadastrar cartão. Veja o impacto nos próximos meses. O Pulsa não pede número do cartão nem CVV."
+          helpText="Simule e registre compras parceladas sem cadastrar cartão. Veja o impacto nos próximos meses. O Trevo não pede número do cartão nem CVV."
           icon={TrendingUp}
           title="Parcelas"
         />
 
         <FirstTimeExplainer
-          storageKey="pulsar_seen_installments_intro"
+          storageKey="trevo_seen_installments_intro"
           title="Simule antes de comprar"
           description="Use o simulador para ver como uma compra parcelada afeta seus próximos meses. Depois salve no seu controle de parcelas."
         />
@@ -224,7 +224,7 @@ export default function ParcelasPage() {
                 <div key={item.month} className="rounded-app border border-line p-3 text-sm">
                   <strong className="block">{item.month}</strong>
                   <span className="mt-1 block text-xs text-muted">Parcela</span>
-                  <span className="block font-semibold text-leaf">{formatBRL(item.simulatedInstallment)}</span>
+                  <span className="block font-semibold text-success">{formatBRL(item.simulatedInstallment)}</span>
                   <span className="mt-2 block text-xs text-muted">Compromisso estimado</span>
                   <span className="block font-semibold">{formatBRL(item.projectedTotal)}</span>
                 </div>

@@ -11,10 +11,11 @@ import re
 import secrets
 import time
 import uuid
-from datetime import date, datetime, timedelta, timezone
-from decimal import Decimal, ROUND_HALF_UP
+from contextvars import ContextVar
+from datetime import UTC, date, datetime, timedelta
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 from uuid import UUID
 
 from dotenv import load_dotenv
@@ -31,10 +32,10 @@ from pydantic import BaseModel, Field
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
+from starlette.concurrency import run_in_threadpool
 from starlette.responses import Response
 
-from migrate import run_migrations
-
+from app.core import storage
 from app.core.config import settings
 from app.core.database import (
     close_db_pool,
@@ -44,6 +45,7 @@ from app.core.database import (
     init_db_pool,
     storage_available,
 )
+from app.core.logging import JsonLogFormatter
 from app.core.security import (
     DUMMY_PASSWORD_HASH,
     create_access_token,
@@ -55,20 +57,39 @@ from app.core.security import (
     verify_password,
     verify_pin,
 )
-from app.core import storage
-from app.privacy.service import (
-    POLICY_VERSION,
-    build_data_export,
-    record_consent,
+from app.integrations.normalizer import (
+    build_duplicate_hash,
+    normalize_duplicate_text,
+    parse_decimal_text,
 )
 from app.oauth import (
-    OAUTH_STATE_COOKIE,
     OAUTH_PROVIDERS,
+    OAUTH_STATE_COOKIE,
     build_authorize_redirect,
     fetch_oauth_profile,
     frontend_redirect,
     list_providers,
 )
+from app.privacy.service import (
+    POLICY_VERSION,
+    build_data_export,
+    record_consent,
+)
+from app.shared.dates import (
+    add_months,
+    first_billing_month,
+    format_month_label,
+    get_current_month,
+    get_month_range,
+    month_key_from_date,
+)
+from app.shared.money import (
+    distribute_installments,
+    format_brl,
+    round_money,
+    to_decimal,
+)
+from migrate import run_migrations, run_migrations_locked
 
 load_dotenv()
 
@@ -77,8 +98,8 @@ FRONTEND_OUT_DIR = BASE_DIR / "frontend" / "out"
 
 JWT_ALGORITHM = settings.jwt_algorithm
 ACCESS_TOKEN_EXPIRE_HOURS = settings.access_token_expire_hours
-AUTH_COOKIE_NAME = "pulsa_access_token"
-CSRF_COOKIE_NAME = "pulsa_csrf"
+AUTH_COOKIE_NAME = "trevo_access_token"
+CSRF_COOKIE_NAME = "trevo_csrf"
 CSRF_HEADER_NAME = "X-CSRF-Token"
 # State-changing endpoints reached before a session cookie exists (so no CSRF risk).
 CSRF_EXEMPT_PATHS = {"/api/auth/login", "/api/auth/register", "/api/auth/csrf"}
@@ -112,20 +133,6 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 LOG_FORMAT = os.getenv("LOG_FORMAT", "text")
 
 
-class JsonLogFormatter(logging.Formatter):
-    def format(self, record: logging.LogRecord) -> str:
-        entry = {
-            "timestamp": datetime.fromtimestamp(record.created, timezone.utc).isoformat(),
-            "level": record.levelname,
-            "service": record.name,
-            "request_id": getattr(record, "request_id", None),
-            "message": record.getMessage(),
-        }
-        if record.exc_info:
-            entry["exception"] = self.formatException(record.exc_info)
-        return json.dumps(entry)
-
-
 if LOG_FORMAT == "json":
     handler = logging.StreamHandler()
     handler.setFormatter(JsonLogFormatter())
@@ -135,7 +142,7 @@ else:
         level=getattr(logging, LOG_LEVEL, logging.INFO),
         format="%(asctime)s %(levelname)s %(message)s",
     )
-logger = logging.getLogger("ritmo_financeiro")
+logger = logging.getLogger("trevo")
 
 
 def email_hash(email: str) -> str:
@@ -154,7 +161,7 @@ def audit_log(event: str, user_id: str | None, details: dict | None = None) -> N
         "audit": True,
         "event": event,
         "user_id": user_id,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         **(details or {}),
     }
     logger.info(json.dumps(entry))
@@ -170,22 +177,22 @@ revoked_token_hashes: set[str] = set()
 startup_time = time.time()
 
 DEFAULT_CATEGORIES: list[tuple[str, str, str, str, int]] = [
-    ("Sal\u00e1rio", "income", "#9be768", "\U0001f4bc", 1),
-    ("Freelance", "income", "#b8b8ff", "\U0001f9e0", 1),
-    ("Investimentos", "income", "#7cd992", "\U0001f4c8", 1),
-    ("Moradia", "expense", "#ff8a80", "\U0001f3e0", 1),
-    ("Alimenta\u00e7\u00e3o", "expense", "#ffd54f", "\U0001f37d\ufe0f", 1),
-    ("Mercado", "expense", "#ffcc80", "\U0001f6d2", 1),
-    ("Transporte", "expense", "#90caf9", "\U0001f68c", 1),
-    ("Sa\u00fade", "expense", "#ef9a9a", "\U0001f48a", 1),
-    ("Educa\u00e7\u00e3o", "expense", "#ce93d8", "\U0001f4da", 1),
-    ("Assinaturas", "expense", "#80cbc4", "\U0001f4fa", 1),
-    ("Lazer", "expense", "#f48fb1", "\U0001f3ae", 1),
-    ("Contas", "expense", "#b0bec5", "\U0001f4a1", 1),
-    ("Reserva", "expense", "#aed581", "\U0001f4b0", 1),
-    ("Pets", "expense", "#bcaaa4", "\U0001f436", 1),
-    ("Presentes", "expense", "#ffab91", "\U0001f381", 1),
-    ("Outros", "expense", "#cfd8dc", "\U0001f4cc", 1),
+    ("Sal\u00e1rio", "income", "#2E9D5B", "\U0001f4bc", 1),
+    ("Freelance", "income", "#4FB877", "\U0001f9e0", 1),
+    ("Investimentos", "income", "#7FD199", "\U0001f4c8", 1),
+    ("Moradia", "expense", "#D9A441", "\U0001f3e0", 1),
+    ("Alimenta\u00e7\u00e3o", "expense", "#E4884A", "\U0001f37d\ufe0f", 1),
+    ("Mercado", "expense", "#C97B9E", "\U0001f6d2", 1),
+    ("Transporte", "expense", "#4E8FBF", "\U0001f68c", 1),
+    ("Sa\u00fade", "expense", "#D1495B", "\U0001f48a", 1),
+    ("Educa\u00e7\u00e3o", "expense", "#8B7BC4", "\U0001f4da", 1),
+    ("Assinaturas", "expense", "#4CA9A0", "\U0001f4fa", 1),
+    ("Lazer", "expense", "#E0658A", "\U0001f3ae", 1),
+    ("Contas", "expense", "#7A8B99", "\U0001f4a1", 1),
+    ("Reserva", "expense", "#1F8049", "\U0001f4b0", 1),
+    ("Pets", "expense", "#B08968", "\U0001f436", 1),
+    ("Presentes", "expense", "#E07A5F", "\U0001f381", 1),
+    ("Outros", "expense", "#96A5A0", "\U0001f4cc", 1),
 ]
 
 
@@ -198,7 +205,7 @@ if not settings.is_serverless:
     PROFILE_PHOTO_DIR.mkdir(parents=True, exist_ok=True)
 
 
-app = FastAPI(title="Pulsa API", version="2.0.0")
+app = FastAPI(title="Trevo API", version="2.0.0")
 app.state.limiter = limiter
 if not settings.is_serverless:
     app.mount(PROFILE_PHOTO_URL_PREFIX, StaticFiles(directory=PROFILE_PHOTO_DIR), name="profile-photos")
@@ -220,10 +227,48 @@ app.add_middleware(
 )
 
 
+# Agregados caros (orçamento, metas) são pedidos várias vezes dentro da mesma
+# request — /api/bootstrap sozinho pedia o orçamento 3x e as metas 2x. O cache
+# vive só enquanto a request dura, então nunca serve dado velho entre requests.
+_request_cache: ContextVar[dict | None] = ContextVar("request_cache", default=None)
+
+
+def request_cached(key: tuple, factory):
+    cache = _request_cache.get()
+    if cache is None:
+        return factory()
+    if key not in cache:
+        cache[key] = factory()
+    return cache[key]
+
+
+# Em serverless o startup não roda migrations (um banco fora do ar derrubaria o
+# cold start inteiro) e o build da Vercel também não as roda — o schema ficava
+# congelado no que existisse. Aqui elas rodam uma vez por processo, sob advisory
+# lock e sem poder derrubar a request se falharem.
+_schema_checked = False
+
+
+def ensure_serverless_schema() -> None:
+    global _schema_checked
+    if _schema_checked or not settings.is_serverless:
+        return
+    _schema_checked = True  # uma tentativa por processo, mesmo se falhar
+    try:
+        with connection() as conn:
+            run_migrations_locked(conn)
+        logger.info("Serverless schema check completed")
+    except Exception:
+        logger.exception("Serverless migration check failed; serving anyway")
+
+
 @app.middleware("http")
 async def add_request_id(request: Request, call_next):
     request_id = str(uuid.uuid4())[:8]
     request.state.request_id = request_id
+    _request_cache.set({})
+    if not _schema_checked and request.url.path.startswith("/api/"):
+        await run_in_threadpool(ensure_serverless_schema)
     response = await call_next(request)
     response.headers["X-Request-Id"] = request_id
     return response
@@ -249,7 +294,7 @@ async def validate_content_type(request: Request, call_next):
 async def csrf_protect(request: Request, call_next):
     # Double-submit CSRF: for state-changing /api requests authenticated by the
     # session cookie (not a Bearer token), require the X-CSRF-Token header to
-    # match the pulsa_csrf cookie. Bearer/API clients are exempt, and requests
+    # match the trevo_csrf cookie. Bearer/API clients are exempt, and requests
     # before login (no auth cookie yet) are naturally exempt.
     path = request.url.path
     if (
@@ -350,7 +395,7 @@ def decode_token_metadata(token: str) -> tuple[str | None, datetime | None]:
     expires_at = None
     exp = claims.get("exp")
     if isinstance(exp, (int, float)):
-        expires_at = datetime.fromtimestamp(exp, timezone.utc)
+        expires_at = datetime.fromtimestamp(exp, UTC)
     return user_id, expires_at
 
 
@@ -358,15 +403,15 @@ def as_utc_datetime(value: Any) -> datetime | None:
     if not isinstance(value, datetime):
         return None
     if value.tzinfo is None:
-        return value.replace(tzinfo=timezone.utc)
-    return value.astimezone(timezone.utc)
+        return value.replace(tzinfo=UTC)
+    return value.astimezone(UTC)
 
 
 @app.on_event("startup")
 def startup() -> None:
     global startup_time
     startup_time = time.time()
-    logger.info("Starting Ritmo Financeiro Pro")
+    logger.info("Starting Trevo")
     # Serverless (Vercel) validates config lazily per request and connects per
     # request; running validation/pool/migrations at cold start would crash the
     # entire function when env vars are absent. Migrations run at build/deploy time.
@@ -382,103 +427,8 @@ def startup() -> None:
 
 @app.on_event("shutdown")
 def shutdown() -> None:
-    logger.info("Shutting down Ritmo Financeiro Pro")
+    logger.info("Shutting down Trevo")
     close_db_pool()
-
-
-def pad(value: int) -> str:
-    return str(value).zfill(2)
-
-
-def month_key_from_date(date_str: str) -> str:
-    return date_str[:7]
-
-
-def add_months(month_key: str, offset: int) -> str:
-    year, month = [int(part) for part in month_key.split("-")]
-    total_month = (year * 12 + (month - 1)) + offset
-    new_year = total_month // 12
-    new_month = total_month % 12 + 1
-    return f"{new_year}-{pad(new_month)}"
-
-
-def format_month_label(month_key: str) -> str:
-    names = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
-    year, month = [int(part) for part in month_key.split("-")]
-    return f"{names[month - 1]}/{str(year)[2:]}"
-
-
-def get_current_month() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m")
-
-
-def get_month_range(month_key: str) -> tuple[str, str]:
-    year, month = [int(part) for part in month_key.split("-")]
-    if month == 12:
-        next_year, next_month = year + 1, 1
-    else:
-        next_year, next_month = year, month + 1
-
-    start = date(year, month, 1)
-    end = date(next_year, next_month, 1) - timedelta(days=1)
-    return start.isoformat(), end.isoformat()
-
-
-CENT = Decimal("0.01")
-
-
-def to_decimal(value: Any) -> Decimal:
-    if isinstance(value, Decimal):
-        return value
-    if value is None:
-        return Decimal("0")
-    return Decimal(str(value))
-
-
-def round_money(value: Any) -> Decimal:
-    return to_decimal(value).quantize(CENT, rounding=ROUND_HALF_UP)
-
-
-def distribute_installments(total: Any, installments: int) -> list[Decimal]:
-    if installments <= 0:
-        raise ValueError("Quantidade de parcelas deve ser maior que zero.")
-
-    rounded_total = round_money(total)
-    total_cents = int((rounded_total * 100).to_integral_value(rounding=ROUND_HALF_UP))
-    if total_cents < installments:
-        raise ValueError("Valor total insuficiente para a quantidade de parcelas.")
-
-    base = round_money(Decimal(total_cents // installments) / Decimal("100"))
-    parts = [base for _ in range(installments)]
-    parts[-1] = round_money(rounded_total - sum(parts[:-1], Decimal("0")))
-    return parts
-
-
-def normalize_duplicate_text(value: str) -> str:
-    return re.sub(r"\s+", " ", value.strip().lower())
-
-
-def build_duplicate_hash(user_id: str, transaction_date: str, description: str, amount: Any, transaction_type: str = "") -> str:
-    amount_text = f"{round_money(amount):.2f}"
-    parts = [user_id, transaction_date, normalize_duplicate_text(description), amount_text]
-    if transaction_type:
-        parts.append(transaction_type)
-    raw = "|".join(parts)
-    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
-
-
-def parse_decimal_text(value: Any) -> Decimal:
-    text = str(value or "").strip()
-    if not text:
-        raise ValueError("Valor vazio.")
-    cleaned = re.sub(r"[^\d,.\-+]", "", text)
-    if not cleaned:
-        raise ValueError("Valor inválido.")
-    if "," in cleaned and "." in cleaned:
-        cleaned = cleaned.replace(".", "").replace(",", ".")
-    elif "," in cleaned:
-        cleaned = cleaned.replace(",", ".")
-    return to_decimal(cleaned)
 
 
 def parse_import_date(value: Any) -> str:
@@ -549,7 +499,7 @@ def serialize_value(value: Any) -> Any:
     return value
 
 
-def normalize_row(row: Any | None) -> Optional[dict]:
+def normalize_row(row: Any | None) -> dict | None:
     if row is None:
         return None
     return {key: serialize_value(value) for key, value in dict(row).items()}
@@ -559,7 +509,7 @@ def normalize_rows(rows: list[Any]) -> list[dict]:
     return [normalize_row(row) or {} for row in rows]
 
 
-def require_row(row: Optional[dict], detail: str = "Registro n\u00e3o encontrado.") -> dict:
+def require_row(row: dict | None, detail: str = "Registro n\u00e3o encontrado.") -> dict:
     if row is None:
         raise HTTPException(status_code=500, detail=detail)
     return row
@@ -619,18 +569,18 @@ def validate_date_text(value: str, field_name: str) -> str:
     try:
         datetime.strptime(cleaned, "%Y-%m-%d")
     except ValueError:
-        raise HTTPException(status_code=400, detail=f"{field_name} inv\u00e1lida.")
+        raise HTTPException(status_code=400, detail=f"{field_name} inv\u00e1lida.") from None
     return cleaned
 
 
-def validate_month_text(value: Optional[str]) -> Optional[str]:
+def validate_month_text(value: str | None) -> str | None:
     if not value:
         return None
     cleaned = clean_text(value, "M\u00eas", 7)
     try:
         datetime.strptime(cleaned, "%Y-%m")
     except ValueError:
-        raise HTTPException(status_code=400, detail="M\u00eas inv\u00e1lido.")
+        raise HTTPException(status_code=400, detail="M\u00eas inv\u00e1lido.") from None
     return cleaned
 
 
@@ -647,7 +597,7 @@ def login_failure_key(email: str) -> str:
 
 def enforce_login_rate_limit(email: str) -> None:
     key = login_failure_key(email)
-    now_dt = datetime.now(timezone.utc)
+    now_dt = datetime.now(UTC)
     now = now_dt.timestamp()
     if storage_available():
         try:
@@ -692,7 +642,7 @@ def enforce_login_rate_limit(email: str) -> None:
 
 def record_login_failure(email: str) -> None:
     key = login_failure_key(email)
-    now_dt = datetime.now(timezone.utc)
+    now_dt = datetime.now(UTC)
     now = now_dt.timestamp()
     if storage_available():
         try:
@@ -849,7 +799,7 @@ def public_user(user: dict) -> dict:
     }
 
 
-def get_user_by_email(email: str) -> Optional[dict]:
+def get_user_by_email(email: str) -> dict | None:
     with db_cursor() as cursor:
         cursor.execute(
             """
@@ -863,7 +813,7 @@ def get_user_by_email(email: str) -> Optional[dict]:
         return normalize_row(cursor.fetchone())
 
 
-def get_user_by_oauth(provider: str, subject: str) -> Optional[dict]:
+def get_user_by_oauth(provider: str, subject: str) -> dict | None:
     with db_cursor() as cursor:
         cursor.execute(
             """
@@ -877,7 +827,7 @@ def get_user_by_oauth(provider: str, subject: str) -> Optional[dict]:
         return normalize_row(cursor.fetchone())
 
 
-def get_user_by_id(user_id: str) -> Optional[dict]:
+def get_user_by_id(user_id: str) -> dict | None:
     with db_cursor() as cursor:
         cursor.execute(
             """
@@ -945,7 +895,7 @@ def resolve_oauth_user(profile: dict[str, str]) -> dict:
         linked = get_user_by_oauth(provider, subject) or get_user_by_email(email)
         if linked:
             return linked
-        raise HTTPException(status_code=409, detail="Não foi possível vincular conta social.")
+        raise HTTPException(status_code=409, detail="Não foi possível vincular conta social.") from None
 
     audit_log("user_registered_oauth", str(user["id"]), {"provider": provider, "email_hash": email_hash(email)})
     return user
@@ -997,7 +947,7 @@ def get_current_user(
         user_uuid = UUID(str(subject))
         issued_at_claim = payload.get("iat")
     except (JWTError, ValueError):
-        raise credentials_error
+        raise credentials_error from None
 
     user = get_user_by_id(str(user_uuid))
     if not user or not user["is_active"]:
@@ -1006,7 +956,7 @@ def get_current_user(
     if password_changed_at:
         if not isinstance(issued_at_claim, (int, float)):
             raise credentials_error
-        issued_at = datetime.fromtimestamp(float(issued_at_claim), timezone.utc)
+        issued_at = datetime.fromtimestamp(float(issued_at_claim), UTC)
         if issued_at < password_changed_at:
             raise credentials_error
     return public_user(user)
@@ -1059,13 +1009,13 @@ def list_cards(user_id: str) -> list[dict]:
 
 def list_transactions(
     user_id: str,
-    month: Optional[str] = None,
-    transaction_type: Optional[str] = None,
-    category_id: Optional[int] = None,
-    payment_method: Optional[str] = None,
-    source: Optional[str] = None,
-    card_id: Optional[int] = None,
-    search: Optional[str] = None,
+    month: str | None = None,
+    transaction_type: str | None = None,
+    category_id: int | None = None,
+    payment_method: str | None = None,
+    source: str | None = None,
+    card_id: int | None = None,
+    search: str | None = None,
 ) -> list[dict]:
     pattern = f"%{search}%" if search else None
     query = """
@@ -1243,7 +1193,7 @@ def get_card_for_user(user_id: str, card_id: int) -> dict:
     return card
 
 
-def get_card_pin_row(user_id: str, card_id: int) -> Optional[dict]:
+def get_card_pin_row(user_id: str, card_id: int) -> dict | None:
     with db_cursor() as cursor:
         cursor.execute(
             """
@@ -1315,7 +1265,7 @@ def simulate_card_invoices(
     card_id: int,
     start_month: str,
     months: int,
-    category_id: Optional[int] = None,
+    category_id: int | None = None,
 ) -> list[dict]:
     result: list[dict] = []
     with db_cursor() as cursor:
@@ -1346,7 +1296,7 @@ def simulate_card_invoices(
     return result
 
 
-def get_card_commitment(user_id: str, card_id: int, month: str, category_id: Optional[int] = None) -> dict:
+def get_card_commitment(user_id: str, card_id: int, month: str, category_id: int | None = None) -> dict:
     with db_cursor() as cursor:
         cursor.execute(
             """
@@ -1368,7 +1318,7 @@ def get_card_commitment(user_id: str, card_id: int, month: str, category_id: Opt
     }
 
 
-def get_grouped_installment_purchases(user_id: str, card_id: int, month: str, category_id: Optional[int] = None) -> list[dict]:
+def get_grouped_installment_purchases(user_id: str, card_id: int, month: str, category_id: int | None = None) -> list[dict]:
     with db_cursor() as cursor:
         cursor.execute(
             """
@@ -1433,7 +1383,7 @@ def get_unlocked_card_details(
     card_id: int,
     month: str,
     include_token: bool = False,
-    category_id: Optional[int] = None,
+    category_id: int | None = None,
 ) -> dict:
     card = get_card_for_user(user_id, card_id)
     invoice = get_invoice_total(user_id, card_id, month)
@@ -1479,7 +1429,7 @@ def card_pin_failure_key(user_id: str, card_id: int) -> str:
 
 def enforce_card_pin_rate_limit(user_id: str, card_id: int) -> None:
     key = card_pin_failure_key(user_id, card_id)
-    now = datetime.now(timezone.utc).timestamp()
+    now = datetime.now(UTC).timestamp()
     if storage_available():
         with db_cursor(commit=True) as cursor:
             cursor.execute(
@@ -1495,12 +1445,12 @@ def enforce_card_pin_rate_limit(user_id: str, card_id: int) -> None:
                 return
 
             blocked_until = row.get("blocked_until")
-            if isinstance(blocked_until, datetime) and blocked_until > datetime.now(timezone.utc):
+            if isinstance(blocked_until, datetime) and blocked_until > datetime.now(UTC):
                 raise HTTPException(status_code=429, detail="Muitas tentativas. Tente novamente em 5 minutos.")
 
             first_attempt = row.get("first_attempt_at")
             if isinstance(first_attempt, datetime) and (
-                datetime.now(timezone.utc) - first_attempt
+                datetime.now(UTC) - first_attempt
             ).total_seconds() > PIN_FAILURE_WINDOW_SECONDS:
                 cursor.execute(
                     "DELETE FROM card_pin_failures_state WHERE user_id = %s AND card_id = %s",
@@ -1523,9 +1473,9 @@ def enforce_card_pin_rate_limit(user_id: str, card_id: int) -> None:
 
 def record_card_pin_failure(user_id: str, card_id: int) -> int:
     key = card_pin_failure_key(user_id, card_id)
-    now = datetime.now(timezone.utc).timestamp()
+    now = datetime.now(UTC).timestamp()
     if storage_available():
-        now_dt = datetime.now(timezone.utc)
+        now_dt = datetime.now(UTC)
         blocked_until_dt = None
         with db_cursor(commit=True) as cursor:
             cursor.execute(
@@ -1602,7 +1552,7 @@ def invalidate_card_unlock_sessions(user_id: str, card_id: int) -> None:
 
 def create_card_unlock_session(user_id: str, card_id: int) -> tuple[str, datetime]:
     token = secrets.token_urlsafe(32)
-    expires_at = datetime.now(timezone.utc) + timedelta(seconds=CARD_UNLOCK_SECONDS)
+    expires_at = datetime.now(UTC) + timedelta(seconds=CARD_UNLOCK_SECONDS)
     card_unlock_sessions[token] = {
         "user_id": user_id,
         "card_id": card_id,
@@ -1635,7 +1585,7 @@ def verify_card_unlock_session(user_id: str, card_id: int, token: str) -> None:
             if not row:
                 raise HTTPException(status_code=401, detail="Desbloqueio do cart\u00e3o expirado.")
             expires_at = row["expires_at"]
-            if not isinstance(expires_at, datetime) or expires_at <= datetime.now(timezone.utc):
+            if not isinstance(expires_at, datetime) or expires_at <= datetime.now(UTC):
                 cursor.execute("DELETE FROM card_unlock_sessions_state WHERE token_hash = %s", (token_hash(token),))
                 raise HTTPException(status_code=401, detail="Desbloqueio do cart\u00e3o expirado.")
             if str(row["user_id"]) != user_id or int(row["card_id"]) != card_id:
@@ -1647,7 +1597,7 @@ def verify_card_unlock_session(user_id: str, card_id: int, token: str) -> None:
         raise HTTPException(status_code=401, detail="Desbloqueio do cart\u00e3o expirado.")
 
     expires_at = session["expires_at"]
-    if not isinstance(expires_at, datetime) or expires_at <= datetime.now(timezone.utc):
+    if not isinstance(expires_at, datetime) or expires_at <= datetime.now(UTC):
         card_unlock_sessions.pop(token, None)
         raise HTTPException(status_code=401, detail="Desbloqueio do cart\u00e3o expirado.")
 
@@ -1656,7 +1606,7 @@ def verify_card_unlock_session(user_id: str, card_id: int, token: str) -> None:
 
 
 def get_dashboard(user_id: str, month: str) -> dict:
-    settings = get_settings(user_id)
+    user_settings = get_settings(user_id)
 
     with db_cursor() as cursor:
         cursor.execute(
@@ -1688,23 +1638,28 @@ def get_dashboard(user_id: str, month: str) -> dict:
         )
         category_breakdown = normalize_rows(cursor.fetchall())
 
+        # Os 12 meses da s\u00e9rie saem de uma \u00fanica agrega\u00e7\u00e3o; meses sem lan\u00e7amento
+        # entram zerados no preenchimento abaixo.
         months = [add_months(month, idx - 11) for idx in range(12)]
+        cursor.execute(
+            """
+            SELECT
+              COALESCE(billing_month, substring(transaction_date from 1 for 7)) AS month_key,
+              COALESCE(SUM(CASE WHEN type = 'income' THEN amount END), 0) AS inflow,
+              COALESCE(SUM(CASE WHEN type = 'expense' THEN amount END), 0) AS outflow
+            FROM transactions
+            WHERE user_id = %s
+              AND COALESCE(billing_month, substring(transaction_date from 1 for 7)) = ANY(%s)
+            GROUP BY month_key
+            """,
+            (user_id, months),
+        )
+        trend_by_month = {row["month_key"]: row for row in normalize_rows(cursor.fetchall())}
         monthly_trend: list[dict] = []
         for month_key in months:
-            cursor.execute(
-                """
-                SELECT
-                  COALESCE(SUM(CASE WHEN type = 'income' THEN amount END), 0) AS inflow,
-                  COALESCE(SUM(CASE WHEN type = 'expense' THEN amount END), 0) AS outflow
-                FROM transactions
-                WHERE user_id = %s
-                  AND COALESCE(billing_month, substring(transaction_date from 1 for 7)) = %s
-                """,
-                (user_id, month_key),
-            )
-            row = require_row(normalize_row(cursor.fetchone()), "Totais mensais n\u00e3o encontrados.")
-            inflow = round_money(row["inflow"])
-            outflow = round_money(row["outflow"])
+            row = trend_by_month.get(month_key)
+            inflow = round_money(row["inflow"]) if row else Decimal("0.00")
+            outflow = round_money(row["outflow"]) if row else Decimal("0.00")
             monthly_trend.append(
                 {
                     "month": month_key,
@@ -1759,8 +1714,8 @@ def get_dashboard(user_id: str, month: str) -> dict:
 
     inflow = round_money(totals["inflow"])
     outflow = round_money(totals["outflow"])
-    base_income = round_money(settings["monthly_income"] or 0)
-    reserve_amount = round_money(settings.get("reserve_amount") or 0)
+    base_income = round_money(user_settings["monthly_income"] or 0)
+    reserve_amount = round_money(user_settings.get("reserve_amount") or 0)
     balance = round_money(base_income + inflow - outflow)
     goals = get_goals(user_id, month)
     previous_inflow = round_money(previous_totals["inflow"])
@@ -1788,8 +1743,8 @@ def get_dashboard(user_id: str, month: str) -> dict:
         "closingProjection": goals["projectedClosing"],
         "reserve": {
             "monthlyPlanned": reserve_amount,
-            "goalAmount": round_money(settings.get("reserve_goal_amount") or 0),
-            "currentAmount": round_money(settings.get("reserve_current_amount") or 0),
+            "goalAmount": round_money(user_settings.get("reserve_goal_amount") or 0),
+            "currentAmount": round_money(user_settings.get("reserve_current_amount") or 0),
         },
         "previousMonthComparison": {
             "month": previous_month,
@@ -1808,14 +1763,18 @@ def get_dashboard(user_id: str, month: str) -> dict:
 
 
 def get_goals(user_id: str, month: str) -> dict:
-    settings = get_settings(user_id)
+    return request_cached(("goals", user_id, month), lambda: _compute_goals(user_id, month))
+
+
+def _compute_goals(user_id: str, month: str) -> dict:
+    user_settings = get_settings(user_id)
     start, end = get_month_range(month)
     year, month_num = [int(part) for part in month.split("-")]
 
     from calendar import monthrange
 
     total_days = monthrange(year, month_num)[1]
-    today = datetime.now(timezone.utc).date()
+    today = datetime.now(UTC).date()
     current_month = today.strftime("%Y-%m")
     if month < current_month:
         progress_day = total_days
@@ -1874,9 +1833,9 @@ def get_goals(user_id: str, month: str) -> dict:
         for row in rows
     }
     days: list[dict] = []
-    legacy_daily_goal = round_money(settings["daily_goal"])
-    reserve_amount = round_money(settings.get("reserve_amount") or 0)
-    monthly_income = round_money(settings["monthly_income"] or 0)
+    legacy_daily_goal = round_money(user_settings["daily_goal"])
+    reserve_amount = round_money(user_settings.get("reserve_amount") or 0)
+    monthly_income = round_money(user_settings["monthly_income"] or 0)
     inflow = round_money(totals["inflow"])
     outflow = round_money(totals["outflow"])
     outflow_to_today = round_money(current_outflow_row["outflow"])
@@ -1921,7 +1880,7 @@ def get_goals(user_id: str, month: str) -> dict:
     days_above_goal = len([day for day in days if to_decimal(day["spent"]) > target_daily_goal])
     days_below_goal = len([day for day in days if Decimal("0") < to_decimal(day["spent"]) <= target_daily_goal])
     risk_alert = {
-        "green": "Ritmo dentro do orçamento planejado.",
+        "green": "Seu mês está dentro do orçamento planejado.",
         "yellow": "A projeção está até 10% acima do orçamento.",
         "red": "A projeção passa de 10% acima do orçamento.",
     }[status_name]
@@ -1960,6 +1919,10 @@ def get_budget_status(spent: Decimal, planned: Decimal) -> str:
 
 
 def get_budget_summary(user_id: str, month: str) -> dict:
+    return request_cached(("budget", user_id, month), lambda: _compute_budget_summary(user_id, month))
+
+
+def _compute_budget_summary(user_id: str, month: str) -> dict:
     month_key = validate_month_text(month) or get_current_month()
     with db_cursor() as cursor:
         cursor.execute(
@@ -2181,11 +2144,6 @@ def get_category_growth(user_id: str, month: str) -> dict:
     }
 
 
-def format_brl(value: Any) -> str:
-    formatted = f"{round_money(value):,.2f}"
-    return "R$ " + formatted.replace(",", "X").replace(".", ",").replace("X", ".")
-
-
 def payment_method_label(value: Any) -> str:
     labels = {
         "boleto": "Boleto",
@@ -2242,8 +2200,8 @@ def get_score_label(score: int) -> dict:
 
 
 def calculate_score(user_id: str, month: str) -> dict:
-    settings = get_settings(user_id)
-    monthly_income = round_money(settings["monthly_income"] or 0)
+    user_settings = get_settings(user_id)
+    monthly_income = round_money(user_settings["monthly_income"] or 0)
     totals = get_month_totals(user_id, month)
     inflow = totals["inflow"]
     outflow = totals["outflow"]
@@ -2321,8 +2279,8 @@ def calculate_score(user_id: str, month: str) -> dict:
 
 
 def get_alerts_for_month(user_id: str, month: str) -> list[dict]:
-    settings = get_settings(user_id)
-    monthly_income = round_money(settings["monthly_income"] or 0)
+    user_settings = get_settings(user_id)
+    monthly_income = round_money(user_settings["monthly_income"] or 0)
     totals = get_month_totals(user_id, month)
     alerts: list[dict] = []
 
@@ -2358,20 +2316,31 @@ def get_alerts_for_month(user_id: str, month: str) -> list[dict]:
         )
         current_categories = normalize_rows(cursor.fetchall())
         previous_months = [add_months(month, offset) for offset in (-3, -2, -1)]
-        for category in current_categories:
+        # M\u00e9dia dos 3 meses anteriores de todas as categorias em uma query s\u00f3,
+        # em vez de uma por categoria.
+        category_ids = [int(category["id"]) for category in current_categories]
+        previous_by_category: dict[int, Decimal] = {}
+        if category_ids:
             cursor.execute(
                 """
-                SELECT COALESCE(SUM(amount), 0) AS total
+                SELECT category_id, COALESCE(SUM(amount), 0) AS total
                 FROM transactions
                 WHERE user_id = %s
                   AND type = 'expense'
-                  AND category_id = %s
+                  AND category_id = ANY(%s)
                   AND COALESCE(billing_month, substring(transaction_date from 1 for 7)) = ANY(%s)
+                GROUP BY category_id
                 """,
-                (user_id, category["id"], previous_months),
+                (user_id, category_ids, previous_months),
             )
-            previous_row = require_row(normalize_row(cursor.fetchone()), "M\u00e9dia de categoria n\u00e3o encontrada.")
-            average = round_money(to_decimal(previous_row["total"] or 0) / Decimal("3"))
+            previous_by_category = {
+                int(row["category_id"]): to_decimal(row["total"] or 0)
+                for row in normalize_rows(cursor.fetchall())
+            }
+
+        for category in current_categories:
+            previous_total = previous_by_category.get(int(category["id"]), Decimal("0"))
+            average = round_money(previous_total / Decimal("3"))
             current_total = round_money(category["total"] or 0)
             if average > 0 and current_total > average * Decimal("1.3"):
                 percent = int((((current_total / average) - 1) * Decimal("100")).to_integral_value(rounding=ROUND_HALF_UP))
@@ -2471,10 +2440,10 @@ def get_alerts_for_month(user_id: str, month: str) -> list[dict]:
 
 def normalize_recurrence(
     is_recurring: bool,
-    recurrence_type: Optional[str],
-    recurrence_day: Optional[int],
-    transaction_date: Optional[str] = None,
-) -> tuple[bool, Optional[str], Optional[int]]:
+    recurrence_type: str | None,
+    recurrence_day: int | None,
+    transaction_date: str | None = None,
+) -> tuple[bool, str | None, int | None]:
     if not is_recurring:
         return False, None, None
 
@@ -2587,7 +2556,7 @@ class RegisterPayload(BaseModel):
 
 
 class DeleteAccountPayload(BaseModel):
-    password: Optional[str] = None
+    password: str | None = None
 
     class Config:
         extra = "forbid"
@@ -2602,11 +2571,11 @@ class ConsentPayload(BaseModel):
 
 
 class SettingsPayload(BaseModel):
-    monthlyIncome: Optional[Decimal] = Field(default=None, ge=0, le=999999999)
-    dailyGoal: Optional[Decimal] = Field(default=None, ge=0, le=999999999)
-    reserveAmount: Optional[Decimal] = Field(default=None, ge=0, le=999999999)
-    reserveGoalAmount: Optional[Decimal] = Field(default=None, ge=0, le=999999999)
-    reserveCurrentAmount: Optional[Decimal] = Field(default=None, ge=0, le=999999999)
+    monthlyIncome: Decimal | None = Field(default=None, ge=0, le=999999999)
+    dailyGoal: Decimal | None = Field(default=None, ge=0, le=999999999)
+    reserveAmount: Decimal | None = Field(default=None, ge=0, le=999999999)
+    reserveGoalAmount: Decimal | None = Field(default=None, ge=0, le=999999999)
+    reserveCurrentAmount: Decimal | None = Field(default=None, ge=0, le=999999999)
 
     class Config:
         extra = "forbid"
@@ -2626,15 +2595,15 @@ class TransactionPayload(BaseModel):
     title: str = Field(..., min_length=1, max_length=200)
     amount: Decimal = Field(..., gt=0, le=999999999)
     type: Literal["income", "expense"] = "expense"
-    categoryId: Optional[int] = Field(default=None, ge=1)
+    categoryId: int | None = Field(default=None, ge=1)
     paymentMethod: str = Field(default="pix", min_length=1, max_length=50)
     transactionDate: str = Field(..., min_length=10, max_length=10)
     notes: str = Field(default="", max_length=1000)
-    cardId: Optional[int] = Field(default=None, ge=1)
-    billingMonth: Optional[str] = Field(default=None, min_length=7, max_length=7)
+    cardId: int | None = Field(default=None, ge=1)
+    billingMonth: str | None = Field(default=None, min_length=7, max_length=7)
     isRecurring: bool = False
-    recurrenceType: Optional[Literal["monthly", "weekly"]] = None
-    recurrenceDay: Optional[int] = Field(default=None, ge=0, le=31)
+    recurrenceType: Literal["monthly", "weekly"] | None = None
+    recurrenceDay: int | None = Field(default=None, ge=0, le=31)
 
     class Config:
         extra = "forbid"
@@ -2655,7 +2624,7 @@ class CardPayload(BaseModel):
 
 class InstallmentPayload(BaseModel):
     title: str = Field(..., min_length=1, max_length=200)
-    categoryId: Optional[int] = Field(default=None, ge=1)
+    categoryId: int | None = Field(default=None, ge=1)
     totalAmount: Decimal = Field(..., gt=0, le=999999999)
     totalInstallments: int = Field(..., ge=2, le=24)
     purchaseDate: str = Field(..., min_length=10, max_length=10)
@@ -2688,7 +2657,7 @@ class InstallmentSimulationPayload(BaseModel):
 
 class InstallmentWithoutCardPayload(BaseModel):
     title: str = Field(..., min_length=1, max_length=200)
-    categoryId: Optional[int] = Field(default=None, ge=1)
+    categoryId: int | None = Field(default=None, ge=1)
     totalAmount: Decimal = Field(..., gt=0, le=999999999)
     totalInstallments: int = Field(..., ge=2, le=24)
     interestRate: float = Field(default=0, ge=0, le=100)
@@ -2703,7 +2672,7 @@ class CsvColumnMapping(BaseModel):
     date: str = Field(..., min_length=1, max_length=120)
     description: str = Field(..., min_length=1, max_length=120)
     value: str = Field(..., min_length=1, max_length=120)
-    type: Optional[str] = Field(default=None, max_length=120)
+    type: str | None = Field(default=None, max_length=120)
 
     class Config:
         extra = "forbid"
@@ -2729,9 +2698,9 @@ class PinPayload(BaseModel):
 
 
 class ProfilePayload(BaseModel):
-    name: Optional[str] = Field(default=None, min_length=1, max_length=100)
-    avatar_url: Optional[str] = Field(default=None, max_length=500)
-    send_monthly_summary: Optional[bool] = None
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    avatar_url: str | None = Field(default=None, max_length=500)
+    send_monthly_summary: bool | None = None
 
     class Config:
         extra = "forbid"
@@ -2747,23 +2716,23 @@ class ChangePasswordPayload(BaseModel):
 
 class RecurringPayload(BaseModel):
     is_recurring: bool
-    recurrence_type: Optional[Literal["monthly", "weekly"]] = None
-    recurrence_day: Optional[int] = Field(default=None, ge=0, le=31)
+    recurrence_type: Literal["monthly", "weekly"] | None = None
+    recurrence_day: int | None = Field(default=None, ge=0, le=31)
 
     class Config:
         extra = "forbid"
 
 
 class TransactionUpdatePayload(BaseModel):
-    title: Optional[str] = Field(default=None, min_length=1, max_length=200)
-    amount: Optional[Decimal] = Field(default=None, gt=0, le=999999999)
-    type: Optional[Literal["income", "expense"]] = None
-    categoryId: Optional[int] = Field(default=None, ge=1)
-    paymentMethod: Optional[str] = Field(default=None, min_length=1, max_length=50)
-    transactionDate: Optional[str] = Field(default=None, min_length=10, max_length=10)
-    notes: Optional[str] = Field(default=None, max_length=1000)
-    cardId: Optional[int] = Field(default=None, ge=1)
-    billingMonth: Optional[str] = Field(default=None, min_length=7, max_length=7)
+    title: str | None = Field(default=None, min_length=1, max_length=200)
+    amount: Decimal | None = Field(default=None, gt=0, le=999999999)
+    type: Literal["income", "expense"] | None = None
+    categoryId: int | None = Field(default=None, ge=1)
+    paymentMethod: str | None = Field(default=None, min_length=1, max_length=50)
+    transactionDate: str | None = Field(default=None, min_length=10, max_length=10)
+    notes: str | None = Field(default=None, max_length=1000)
+    cardId: int | None = Field(default=None, ge=1)
+    billingMonth: str | None = Field(default=None, min_length=7, max_length=7)
 
     class Config:
         extra = "forbid"
@@ -2789,20 +2758,20 @@ class BudgetCopyPayload(BaseModel):
 class CategorizationRulePayload(BaseModel):
     pattern: str = Field(..., min_length=2, max_length=120)
     categoryId: int = Field(..., ge=1)
-    paymentMethod: Optional[str] = Field(default=None, min_length=1, max_length=50)
+    paymentMethod: str | None = Field(default=None, min_length=1, max_length=50)
 
     class Config:
         extra = "forbid"
 
 
 class CardUpdatePayload(BaseModel):
-    name: Optional[str] = Field(default=None, min_length=1, max_length=100)
-    brand: Optional[str] = Field(default=None, min_length=1, max_length=40)
-    lastFour: Optional[str] = Field(default=None, min_length=4, max_length=4)
-    creditLimit: Optional[Decimal] = Field(default=None, ge=0, le=999999999)
-    closingDay: Optional[int] = Field(default=None, ge=1, le=31)
-    dueDay: Optional[int] = Field(default=None, ge=1, le=31)
-    color: Optional[str] = Field(default=None, min_length=1, max_length=20)
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    brand: str | None = Field(default=None, min_length=1, max_length=40)
+    lastFour: str | None = Field(default=None, min_length=4, max_length=4)
+    creditLimit: Decimal | None = Field(default=None, ge=0, le=999999999)
+    closingDay: int | None = Field(default=None, ge=1, le=31)
+    dueDay: int | None = Field(default=None, ge=1, le=31)
+    color: str | None = Field(default=None, min_length=1, max_length=20)
 
     class Config:
         extra = "forbid"
@@ -2850,7 +2819,7 @@ def get_csv_import_session(user_id: str, token: str) -> dict:
 
 
 def cleanup_csv_import_sessions() -> None:
-    cutoff = datetime.now(timezone.utc) - timedelta(minutes=30)
+    cutoff = datetime.now(UTC) - timedelta(minutes=30)
     if storage_available():
         with db_cursor(commit=True) as cursor:
             cursor.execute("DELETE FROM csv_import_sessions_state WHERE created_at < %s", (cutoff,))
@@ -3001,7 +2970,7 @@ def register(request: Request, response: Response, payload: RegisterPayload) -> 
             record_consent(cursor, user["id"], scope="terms_privacy", granted=True, ip_hash=ip_hash, channel="register")
     except errors.UniqueViolation:
         audit_log("user_register_failed", None, {"email_hash": email_hash(email), "reason": "duplicate"})
-        raise HTTPException(status_code=400, detail="E-mail j\u00e1 cadastrado.")
+        raise HTTPException(status_code=400, detail="E-mail j\u00e1 cadastrado.") from None
 
     audit_log("user_registered", str(user["id"]), {"email_hash": email_hash(email)})
     token = create_access_token(user["id"])
@@ -3164,7 +3133,7 @@ async def upload_profile_photo(
     try:
         avatar_url = storage.store_avatar(user_id, content, extension, normalized_type)
     except ValueError:
-        raise HTTPException(status_code=400, detail="Nome de arquivo inválido.")
+        raise HTTPException(status_code=400, detail="Nome de arquivo inválido.") from None
     previous_avatar_url = current_user.get("avatar_url")
 
     with db_cursor(commit=True) as cursor:
@@ -3261,9 +3230,10 @@ def delete_account(
     em user_id removem settings/categorias/transações/cartões/orçamentos/etc.
     """
     user = get_user_by_id(current_user["id"])
-    if user and user.get("hashed_password"):
-        if not payload.password or not verify_password(payload.password, user["hashed_password"]):
-            raise HTTPException(status_code=400, detail="Senha incorreta.")
+    if user and user.get("hashed_password") and (
+        not payload.password or not verify_password(payload.password, user["hashed_password"])
+    ):
+        raise HTTPException(status_code=400, detail="Senha incorreta.")
 
     avatar_ref = user.get("avatar_url") if user else None
     with db_cursor(commit=True) as cursor:
@@ -3289,7 +3259,7 @@ def export_my_data(request: Request, current_user: dict = Depends(get_current_us
     return Response(
         content=body,
         media_type="application/json",
-        headers={"Content-Disposition": 'attachment; filename="pulsa-meus-dados.json"'},
+        headers={"Content-Disposition": 'attachment; filename="trevo-meus-dados.json"'},
     )
 
 
@@ -3327,7 +3297,7 @@ def update_consent(
 
 
 @app.get("/api/bootstrap")
-def bootstrap(month: Optional[str] = None, current_user: dict = Depends(get_current_user)) -> dict:
+def bootstrap(month: str | None = None, current_user: dict = Depends(get_current_user)) -> dict:
     user_id = current_user["id"]
     month_key = validate_month_text(month) or get_current_month()
     ensure_user_defaults(user_id)
@@ -3349,32 +3319,32 @@ def bootstrap(month: Optional[str] = None, current_user: dict = Depends(get_curr
 
 
 @app.get("/api/score")
-def score(month: Optional[str] = None, current_user: dict = Depends(get_current_user)) -> dict:
+def score(month: str | None = None, current_user: dict = Depends(get_current_user)) -> dict:
     month_key = validate_month_text(month) or get_current_month()
     return calculate_score(current_user["id"], month_key)
 
 
 @app.get("/api/alerts")
-def alerts(month: Optional[str] = None, current_user: dict = Depends(get_current_user)) -> list[dict]:
+def alerts(month: str | None = None, current_user: dict = Depends(get_current_user)) -> list[dict]:
     month_key = validate_month_text(month) or get_current_month()
     return get_alerts_for_month(current_user["id"], month_key)
 
 
 @app.get("/api/transactions/suggestions")
-def transaction_suggestions(month: Optional[str] = None, current_user: dict = Depends(get_current_user)) -> list[dict]:
+def transaction_suggestions(month: str | None = None, current_user: dict = Depends(get_current_user)) -> list[dict]:
     month_key = validate_month_text(month) or get_current_month()
     return get_recurring_suggestions(current_user["id"], month_key)
 
 
 @app.get("/api/transactions")
 def transactions(
-    month: Optional[str] = None,
-    type: Optional[Literal["income", "expense"]] = None,
-    categoryId: Optional[int] = Query(default=None, ge=1),
-    paymentMethod: Optional[str] = None,
-    source: Optional[Literal["manual", "csv_import", "open_finance_future"]] = None,
-    cardId: Optional[int] = Query(default=None, ge=1),
-    search: Optional[str] = Query(default=None, max_length=120),
+    month: str | None = None,
+    type: Literal["income", "expense"] | None = None,
+    categoryId: int | None = Query(default=None, ge=1),
+    paymentMethod: str | None = None,
+    source: Literal["manual", "csv_import", "open_finance_future"] | None = None,
+    cardId: int | None = Query(default=None, ge=1),
+    search: str | None = Query(default=None, max_length=120),
     current_user: dict = Depends(get_current_user),
 ) -> list[dict]:
     month_key = validate_month_text(month) if month else None
@@ -3414,7 +3384,7 @@ def upload_csv_import(file: UploadFile = File(...), current_user: dict = Depends
         "filename": filename,
         "columns": columns,
         "rows": rows,
-        "created_at": datetime.now(timezone.utc),
+        "created_at": datetime.now(UTC),
     }
     if storage_available():
         with db_cursor(commit=True) as cursor:
@@ -3513,13 +3483,13 @@ def confirm_csv_import(payload: CsvImportConfirmPayload, current_user: dict = De
 
 
 @app.get("/api/goals")
-def goals(month: Optional[str] = None, current_user: dict = Depends(get_current_user)) -> dict:
+def goals(month: str | None = None, current_user: dict = Depends(get_current_user)) -> dict:
     month_key = validate_month_text(month) or get_current_month()
     return get_goals(current_user["id"], month_key)
 
 
 @app.get("/api/budgets")
-def budgets(month: Optional[str] = None, current_user: dict = Depends(get_current_user)) -> dict:
+def budgets(month: str | None = None, current_user: dict = Depends(get_current_user)) -> dict:
     month_key = validate_month_text(month) or get_current_month()
     return get_budget_summary(current_user["id"], month_key)
 
@@ -3542,7 +3512,7 @@ def save_budget(payload: BudgetPayload, current_user: dict = Depends(get_current
             )
             row = require_row(normalize_row(cursor.fetchone()), "Orçamento não salvo.")
     except errors.ForeignKeyViolation:
-        raise HTTPException(status_code=400, detail="Categoria inválida.")
+        raise HTTPException(status_code=400, detail="Categoria inválida.") from None
     return row
 
 
@@ -3624,23 +3594,23 @@ def create_categorization_rule(
             )
             return require_row(normalize_row(cursor.fetchone()), "Regra não criada.")
     except errors.ForeignKeyViolation:
-        raise HTTPException(status_code=400, detail="Categoria inválida.")
+        raise HTTPException(status_code=400, detail="Categoria inválida.") from None
 
 
 @app.get("/api/reports")
-def reports(month: Optional[str] = None, current_user: dict = Depends(get_current_user)) -> dict:
+def reports(month: str | None = None, current_user: dict = Depends(get_current_user)) -> dict:
     month_key = validate_month_text(month) or get_current_month()
     return get_reports_summary(current_user["id"], month_key)
 
 
 @app.get("/api/cards")
-def cards(month: Optional[str] = None, current_user: dict = Depends(get_current_user)) -> list[dict]:
+def cards(month: str | None = None, current_user: dict = Depends(get_current_user)) -> list[dict]:
     month_key = validate_month_text(month) or get_current_month()
     return get_cards_summary(current_user["id"], month_key)
 
 
 @app.get("/api/cards-detail")
-def cards_detail(month: Optional[str] = None, current_user: dict = Depends(get_current_user)) -> list[dict]:
+def cards_detail(month: str | None = None, current_user: dict = Depends(get_current_user)) -> list[dict]:
     validate_month_text(month) if month else None
     user_id = current_user["id"]
     with db_cursor() as cursor:
@@ -3705,8 +3675,8 @@ def set_card_pin(card_id: int, payload: PinPayload, current_user: dict = Depends
 def unlock_card(
     card_id: int,
     payload: PinPayload,
-    month: Optional[str] = None,
-    categoryId: Optional[int] = Query(default=None, ge=1),
+    month: str | None = None,
+    categoryId: int | None = Query(default=None, ge=1),
     current_user: dict = Depends(get_current_user),
 ) -> dict:
     user_id = current_user["id"]
@@ -3744,8 +3714,8 @@ def unlock_card(
 def simulate_invoices_route(
     card_id: int,
     months: int = Query(12, ge=1, le=24),
-    month: Optional[str] = None,
-    categoryId: Optional[int] = Query(default=None, ge=1),
+    month: str | None = None,
+    categoryId: int | None = Query(default=None, ge=1),
     x_card_unlock_token: str = Header(..., alias="X-Card-Unlock-Token"),
     current_user: dict = Depends(get_current_user),
 ) -> list[dict]:
@@ -3851,7 +3821,7 @@ def create_category(payload: CategoryPayload, current_user: dict = Depends(get_c
             )
             row = require_row(normalize_row(cursor.fetchone()), "Categoria n\u00e3o criada.")
     except errors.UniqueViolation:
-        raise HTTPException(status_code=400, detail="Categoria j\u00e1 existe.")
+        raise HTTPException(status_code=400, detail="Categoria j\u00e1 existe.") from None
 
     return row
 
@@ -3936,7 +3906,7 @@ def create_transaction(payload: TransactionPayload, current_user: dict = Depends
             )
             row = require_row(normalize_row(cursor.fetchone()), "Lan\u00e7amento n\u00e3o criado.")
     except errors.ForeignKeyViolation:
-        raise HTTPException(status_code=400, detail="Categoria ou cart\u00e3o inv\u00e1lido.")
+        raise HTTPException(status_code=400, detail="Categoria ou cart\u00e3o inv\u00e1lido.") from None
 
     return row
 
@@ -4017,7 +3987,7 @@ def update_transaction(
             )
             row = require_row(normalize_row(cursor.fetchone()), "Lançamento não atualizado.")
     except errors.ForeignKeyViolation:
-        raise HTTPException(status_code=400, detail="Categoria ou cartão inválido.")
+        raise HTTPException(status_code=400, detail="Categoria ou cartão inválido.") from None
 
     return row
 
@@ -4073,7 +4043,7 @@ def get_export_transactions(user_id: str, month_key: str) -> list[dict]:
 
 @app.get("/api/export/csv")
 @limiter.limit("20 per 1 hour")
-def export_csv(request: Request, month: Optional[str] = None, current_user: dict = Depends(get_current_user)) -> Response:
+def export_csv(request: Request, month: str | None = None, current_user: dict = Depends(get_current_user)) -> Response:
     user_id = current_user["id"]
     month_key = validate_month_text(month) or get_current_month()
     rows = get_export_transactions(user_id, month_key)
@@ -4113,7 +4083,7 @@ def export_csv(request: Request, month: Optional[str] = None, current_user: dict
         )
 
     headers = {
-        "Content-Disposition": f'attachment; filename="pulsar-relatorio-{month_key}.csv"',
+        "Content-Disposition": f'attachment; filename="trevo-relatorio-{month_key}.csv"',
         "Cache-Control": "no-store",
         "Pragma": "no-cache",
     }
@@ -4195,7 +4165,7 @@ class PdfReport:
                 f"1.0 w {self.margin:.1f} 42.0 m {self.width - self.margin:.1f} 42.0 l S"
             )
             commands.append(pdf_color_command("#6D7B8D", "rg"))
-            commands.append(f"BT /F2 9 Tf {self.margin:.1f} 24.0 Td (Pulsa) Tj ET")
+            commands.append(f"BT /F2 9 Tf {self.margin:.1f} 24.0 Td (Trevo) Tj ET")
             commands.append(
                 f"BT /F1 9 Tf {self.width - 96:.1f} 24.0 Td ({pdf_escape(f'Página {index}')}) Tj ET"
             )
@@ -4432,7 +4402,7 @@ def build_report_pdf(report: dict, rows: list[dict], generated_at: datetime) -> 
     growth = report.get("categoryGrowth") or {"hasHistory": False, "items": []}
 
     pdf.rect(0, 0, pdf.width, 92, fill="#0A1728")
-    pdf.text(pdf.margin, 34, "Pulsa", size=23, color="#FFFFFF", bold=True)
+    pdf.text(pdf.margin, 34, "Trevo", size=23, color="#FFFFFF", bold=True)
     pdf.text(pdf.margin, 58, "Relatório dashboard", size=14, color="#DDFBF1", bold=True)
     pdf.text(pdf.width - 198, 35, f"Mês analisado: {report['month']}", size=10, color="#FFFFFF")
     pdf.text(
@@ -4444,7 +4414,7 @@ def build_report_pdf(report: dict, rows: list[dict], generated_at: datetime) -> 
     )
     pdf.y = 112
 
-    add_pdf_section(pdf, "Resumo mensal", f"Ritmo Score: {score['score']} - {score['label']}")
+    add_pdf_section(pdf, "Resumo mensal", f"Score Trevo: {score['score']} - {score['label']}")
     add_pdf_summary_cards(
         pdf,
         [
@@ -4544,18 +4514,18 @@ def build_report_pdf(report: dict, rows: list[dict], generated_at: datetime) -> 
 
 @app.get("/api/export/pdf")
 @limiter.limit("20 per 1 hour")
-def export_pdf(request: Request, month: Optional[str] = None, current_user: dict = Depends(get_current_user)) -> Response:
+def export_pdf(request: Request, month: str | None = None, current_user: dict = Depends(get_current_user)) -> Response:
     user_id = current_user["id"]
     month_key = validate_month_text(month) or get_current_month()
     report = get_reports_summary(user_id, month_key)
     rows = get_export_transactions(user_id, month_key)
     headers = {
-        "Content-Disposition": f'attachment; filename="pulsar-relatorio-{month_key}.pdf"',
+        "Content-Disposition": f'attachment; filename="trevo-relatorio-{month_key}.pdf"',
         "Cache-Control": "no-store",
         "Pragma": "no-cache",
     }
     return Response(
-        content=build_report_pdf(report, rows, datetime.now(timezone.utc)),
+        content=build_report_pdf(report, rows, datetime.now(UTC)),
         media_type="application/pdf",
         headers=headers,
     )
@@ -4659,7 +4629,6 @@ def create_installments(card_id: int, payload: InstallmentPayload, current_user:
     title = clean_text(payload.title, "Descri\u00e7\u00e3o da compra", 200)
     notes = clean_text(payload.notes, "Observa\u00e7\u00f5es", 1000, required=False)
     purchase_date = validate_date_text(payload.purchaseDate, "Data da compra")
-    base_month = month_key_from_date(purchase_date)
     try:
         installment_amounts = distribute_installments(payload.totalAmount, payload.totalInstallments)
     except ValueError as exc:
@@ -4679,6 +4648,8 @@ def create_installments(card_id: int, payload: InstallmentPayload, current_user:
             if not card:
                 raise HTTPException(status_code=404, detail="Cart\u00e3o n\u00e3o encontrado.")
 
+            # Compra feita depois do fechamento entra na fatura do m\u00eas seguinte.
+            first_month = first_billing_month(purchase_date, card.get("closing_day"))
             group = f"{user_id}-{card_id}-{title}-{purchase_date}"
             for number, amount in enumerate(installment_amounts, start=1):
                 cursor.execute(
@@ -4696,7 +4667,7 @@ def create_installments(card_id: int, payload: InstallmentPayload, current_user:
                         purchase_date,
                         notes,
                         card_id,
-                        add_months(base_month, number - 1),
+                        add_months(first_month, number - 1),
                         group,
                         number,
                         payload.totalInstallments,
@@ -4714,7 +4685,7 @@ def create_installments(card_id: int, payload: InstallmentPayload, current_user:
             )
             rows = normalize_rows(cursor.fetchall())
     except errors.ForeignKeyViolation:
-        raise HTTPException(status_code=400, detail="Categoria ou cart\u00e3o inv\u00e1lido.")
+        raise HTTPException(status_code=400, detail="Categoria ou cart\u00e3o inv\u00e1lido.") from None
 
     return {
         "createdInstallments": len(rows),
@@ -4814,7 +4785,7 @@ def create_installments_without_card(
                     ),
                 )
     except errors.ForeignKeyViolation:
-        raise HTTPException(status_code=400, detail="Categoria inválida.")
+        raise HTTPException(status_code=400, detail="Categoria inválida.") from None
     
     return {
         "createdInstallments": payload.totalInstallments,
@@ -4961,4 +4932,4 @@ else:
 
     @app.get("/")
     def api_root() -> dict:
-        return {"service": "Pulsa API", "docs": "/docs", "health": "/api/health"}
+        return {"service": "Trevo API", "docs": "/docs", "health": "/api/health"}

@@ -13,7 +13,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 - Camada `app/core` real (`config`, `database`, `security`, `storage`) extraída do monólito.
 - Fotos de perfil em Supabase Storage privado (URL assinada), com fallback em disco no dev.
 - Endpoints de saúde separados: `/api/health` (readiness, com DB) e `/api/health/live` (liveness).
-- Login e cadastro com identidade Pulsar, demo do produto e OAuth (Google, GitHub, Facebook) preparado por variáveis de ambiente.
+- Login e cadastro com identidade Trevo, demo do produto e OAuth (Google, GitHub, Facebook) preparado por variáveis de ambiente.
 - Documentação reorganizada em `docs/` (produto, arquitetura, segurança, guias).
 - Templates GitHub (issues, PR), `LICENSE` (MIT), `SECURITY.md`, `CONTRIBUTING.md`.
 

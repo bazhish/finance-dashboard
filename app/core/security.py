@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import hashlib
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from fastapi import HTTPException
 from jose import jwt
@@ -68,7 +68,7 @@ def verify_pin(pin: str, pin_hash: str) -> bool:
 
 
 def create_access_token(user_id: str) -> str:
-    issued_at = datetime.now(timezone.utc)
+    issued_at = datetime.now(UTC)
     expires_at = issued_at + timedelta(hours=settings.access_token_expire_hours)
     payload = {"sub": str(user_id), "iat": int(issued_at.timestamp()), "exp": int(expires_at.timestamp())}
     return jwt.encode(payload, settings.require_jwt_secret(), algorithm=settings.jwt_algorithm)

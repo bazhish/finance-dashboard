@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle } from "@/components/icons";
 import { AuthBrand } from "@/components/auth/AuthBrand";
 import { rememberSession } from "@/lib/authSession";
 
@@ -40,8 +40,8 @@ function OAuthCallbackContent() {
       <div className="glass-panel w-full max-w-md p-6 text-center">
         <AuthBrand />
         <div className="mt-6 flex flex-col items-center gap-3">
-          {!hasError ? <LoaderCircle className="animate-spin text-pulse" size={28} /> : null}
-          <p className={`text-sm ${hasError ? "text-coral" : "text-muted"}`}>{message}</p>
+          {!hasError ? <LoaderCircle className="animate-spin text-leaf" size={28} /> : null}
+          <p className={`text-sm ${hasError ? "text-danger" : "text-muted"}`}>{message}</p>
           {hasError ? (
             <Link className="btn-primary mt-2" href="/login">
               Voltar para login

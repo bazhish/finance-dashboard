@@ -1,4 +1,4 @@
-# Contribuindo com o Pulsar
+# Contribuindo com o Trevo
 
 Obrigado por considerar contribuir. Este projeto é mobile first, com backend FastAPI e frontend Next.js.
 
@@ -31,7 +31,7 @@ Obrigado por considerar contribuir. Este projeto é mobile first, com backend Fa
 python -m pytest tests/unit -q
 
 # Integração (requer Postgres de teste)
-$env:TEST_DATABASE_URL="postgresql://user:pass@localhost:5432/pulsar_test"
+$env:TEST_DATABASE_URL="postgresql://user:pass@localhost:5432/trevo_test"
 python -m pytest tests/integration -q
 ```
 

@@ -1,1 +1,1 @@
-"""Test package for Ritmo Financeiro Pro."""
+"""Test package for Trevo."""

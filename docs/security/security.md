@@ -2,7 +2,7 @@
 
 ## Escopo
 
-Este documento descreve os controles defensivos atuais do Pulsa e o que precisa ser revisado antes de producao.
+Este documento descreve os controles defensivos atuais do Trevo e o que precisa ser revisado antes de producao.
 
 ## Autenticacao
 

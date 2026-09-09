@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, CalendarClock, Target, Wallet } from "lucide-react";
+import { AlertTriangle, CalendarClock, Target, Wallet } from "@/components/icons";
 import { formatBRL } from "@/lib/format";
 
 const flowBars = [42, 68, 55, 82, 61, 74, 48];
@@ -8,16 +8,16 @@ const flowBars = [42, 68, 55, 82, 61, 74, 48];
 export function AuthProductDemo({ compact = false }: Readonly<{ compact?: boolean }>) {
   return (
     <div className={`relative ${compact ? "scale-[0.92] origin-top" : ""}`}>
-      <div className="pointer-events-none absolute -left-6 top-8 h-40 w-40 rounded-full bg-pulse/20 blur-3xl" />
-      <div className="pointer-events-none absolute -right-4 bottom-6 h-36 w-36 rounded-full bg-plum/20 blur-3xl" />
+      <div className="pointer-events-none absolute -left-6 top-8 h-40 w-40 rounded-full bg-leaf/20 blur-3xl" />
+      <div className="pointer-events-none absolute -right-4 bottom-6 h-36 w-36 rounded-full bg-leaf-700/20 blur-3xl" />
 
       <div className="glass-panel relative overflow-hidden p-4 md:p-5">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-bold uppercase tracking-wide text-pulse">Previa do Pulsar</p>
-            <h3 className="mt-1 text-lg font-black text-ink md:text-xl">Acompanhe o pulso do seu mês</h3>
+            <p className="text-xs font-bold uppercase tracking-wide text-leaf">Previa do Trevo</p>
+            <h3 className="mt-1 text-lg font-black text-ink md:text-xl">Seu mês inteiro em uma tela</h3>
           </div>
-          <span className="rounded-app bg-pulse/10 px-2.5 py-1 text-[11px] font-bold text-pulse">Ao vivo</span>
+          <span className="rounded-app bg-leaf/10 px-2.5 py-1 text-[11px] font-bold text-leaf">Ao vivo</span>
         </div>
 
         <div className={`grid gap-3 ${compact ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"}`}>
@@ -28,7 +28,7 @@ export function AuthProductDemo({ compact = false }: Readonly<{ compact?: boolea
                 <p className="metric-number mt-1 text-2xl text-ink md:text-3xl">{formatBRL(142.3)}</p>
                 <p className="mt-1 text-xs text-muted">Meta diária: {formatBRL(85)} · Restam 18 dias úteis</p>
               </div>
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-app bg-pulse/15 text-pulse">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-app bg-leaf/15 text-leaf">
                 <Wallet size={18} />
               </span>
             </div>
@@ -40,17 +40,17 @@ export function AuthProductDemo({ compact = false }: Readonly<{ compact?: boolea
               {flowBars.map((height, index) => (
                 <div
                   key={index}
-                  className="flex-1 rounded-t-md bg-gradient-to-t from-plum/70 to-pulse/80"
+                  className="flex-1 rounded-t-md bg-gradient-to-t from-leaf-700/70 to-leaf/80"
                   style={{ height: `${height}%` }}
                 />
               ))}
             </div>
-            <p className="mt-2 text-[11px] font-semibold text-leaf">Entradas acima das saídas</p>
+            <p className="mt-2 text-[11px] font-semibold text-success">Entradas acima das saídas</p>
           </article>
 
           <article className="rounded-app border border-line/70 bg-surface/90 p-3 shadow-soft">
             <div className="flex items-center gap-2">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-leaf/15 text-leaf">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-success/15 text-success">
                 <Target size={16} />
               </span>
               <div>
@@ -59,14 +59,14 @@ export function AuthProductDemo({ compact = false }: Readonly<{ compact?: boolea
               </div>
             </div>
             <div className="mt-3 h-2 overflow-hidden rounded-full bg-line">
-              <div className="h-full w-[72%] rounded-full bg-gradient-to-r from-pulse to-leaf" />
+              <div className="h-full w-[72%] rounded-full bg-gradient-to-r from-leaf to-success" />
             </div>
             <p className="mt-2 text-[11px] text-muted">Gasto hoje: {formatBRL(61.2)}</p>
           </article>
 
           <article className="rounded-app border border-line/70 bg-surface/90 p-3 shadow-soft">
             <div className="flex items-center gap-2">
-              <CalendarClock size={16} className="text-plum" />
+              <CalendarClock size={16} className="text-leaf-700" />
               <p className="text-xs font-semibold text-muted">Parcelas futuras</p>
             </div>
             <ul className="mt-2 space-y-1.5 text-xs">
@@ -81,9 +81,9 @@ export function AuthProductDemo({ compact = false }: Readonly<{ compact?: boolea
             </ul>
           </article>
 
-          <article className="rounded-app border border-amber/30 bg-amber/10 p-3 shadow-soft">
+          <article className="rounded-app border border-warning/30 bg-warning/10 p-3 shadow-soft">
             <div className="flex items-start gap-2">
-              <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber" />
+              <AlertTriangle size={16} className="mt-0.5 shrink-0 text-warning" />
               <div>
                 <p className="text-xs font-bold text-ink">Alerta de orçamento</p>
                 <p className="mt-1 text-[11px] text-muted">Lazer chegou a 92% do planejado neste mês.</p>

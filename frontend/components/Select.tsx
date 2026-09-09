@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Check, ChevronDown, Search } from "lucide-react";
+import { Check, ChevronDown, Search } from "@/components/icons";
 import { useDelayedPresence } from "@/lib/useDelayedPresence";
 
 type SelectOption = {
@@ -202,10 +202,10 @@ export function Select({
               type="button"
               className={`interactive-list-item flex min-h-10 w-full items-center gap-2 rounded-app px-3 py-2 text-left text-sm transition ${
                 highlighted
-                  ? "bg-pulse text-white"
+                  ? "bg-leaf text-white"
                   : selected
-                  ? "bg-pulse/12 text-ink ring-1 ring-pulse/35"
-                  : "text-ink hover:bg-pulse/10"
+                  ? "bg-leaf/12 text-ink ring-1 ring-leaf/35"
+                  : "text-ink hover:bg-leaf/10"
               }`}
               data-highlighted={highlighted || undefined}
               onClick={() => selectOption(option)}
@@ -236,7 +236,7 @@ export function Select({
           if (disabled) return;
           setOpen((current) => !current);
         }}
-        className={`field flex w-full items-center justify-between gap-2 ${open ? "border-pulse/60 shadow-soft" : ""} ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
+        className={`field flex w-full items-center justify-between gap-2 ${open ? "border-leaf/60 shadow-soft" : ""} ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={open ? listboxId : undefined}

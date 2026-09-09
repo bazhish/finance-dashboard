@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, TrendingDown } from "lucide-react";
+import { AlertTriangle, CheckCircle2, TrendingDown } from "@/components/icons";
 import { formatBRL } from "@/lib/format";
 import type { Alert, Dashboard } from "@/types/finance";
 
@@ -9,9 +9,9 @@ const statusCopy = {
 };
 
 const statusClass = {
-  green: "border-leaf bg-leaf/10 text-leaf",
-  yellow: "border-amber bg-amber/10 text-ink",
-  red: "border-coral bg-coral/10 text-coral"
+  green: "border-success bg-success/10 text-success",
+  yellow: "border-warning bg-warning/10 text-ink",
+  red: "border-danger bg-danger/10 text-danger"
 };
 
 type MainInsightCardProps = {
@@ -39,8 +39,8 @@ export function MainInsightCard({ userName, dashboard, alert }: MainInsightCardP
   const Icon = status === "green" ? CheckCircle2 : status === "yellow" ? AlertTriangle : TrendingDown;
 
   return (
-    <section className="animate-rise-in relative overflow-hidden rounded-app border border-white/10 bg-gradient-to-br from-night via-ink to-plum p-5 text-white shadow-lift">
-      <div className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-pulse/25 blur-3xl" />
+    <section className="animate-rise-in relative overflow-hidden rounded-app border border-white/10 bg-gradient-to-br from-leaf-900 via-ink to-leaf-700 p-5 text-white shadow-lift">
+      <div className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-leaf/25 blur-3xl" />
       <div className="pointer-events-none absolute bottom-0 right-0 h-24 w-44 rounded-tl-full border-l border-t border-white/10" />
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">

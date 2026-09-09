@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, X } from "lucide-react";
+import { Search, X } from "@/components/icons";
 
 type SearchInputProps = {
   value: string;
@@ -24,7 +24,7 @@ export function SearchInput({
   return (
     <div className={`group relative ${className}`}>
       {showIcon ? (
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted transition group-focus-within:text-pulse" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted transition group-focus-within:text-leaf" />
       ) : null}
       <input
         type="text"

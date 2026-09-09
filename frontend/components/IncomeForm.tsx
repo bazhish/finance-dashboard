@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus } from "@/components/icons";
 import { MoneyInput } from "@/components/MoneyInput";
 import { Select } from "@/components/Select";
 import { CreateCategoryDrawer, type CreateCategoryInput } from "@/components/CreateCategoryDrawer";

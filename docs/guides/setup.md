@@ -10,7 +10,7 @@
 
 ```bash
 git clone <url-do-repositorio>
-cd pulsar
+cd trevo
 cp .env.example .env
 ```
 

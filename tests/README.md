@@ -19,7 +19,7 @@ python -m pytest -q
 python -m pytest tests/unit -q
 
 # Integração
-$env:TEST_DATABASE_URL="postgresql://user:pass@localhost:5432/pulsar_test"
+$env:TEST_DATABASE_URL="postgresql://user:pass@localhost:5432/trevo_test"
 python -m pytest tests/integration -q
 ```
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Download, FileText, TrendingUp, Wallet } from "lucide-react";
+import { AlertTriangle, Download, FileText, TrendingUp, Wallet } from "@/components/icons";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ChartCard } from "@/components/ChartCard";
 import { EmptyState } from "@/components/EmptyState";
@@ -56,7 +56,7 @@ function GrowthChart({ report }: { report: ReportSummary | null }) {
     return (
       <EmptyState
         title="Ainda não há histórico suficiente para comparar."
-        description="Assim que houver gastos no mês anterior, o Pulsa mostra quais categorias cresceram ou diminuíram."
+        description="Assim que houver gastos no mês anterior, o Trevo mostra quais categorias cresceram ou diminuíram."
         icon={TrendingUp}
       />
     );
@@ -77,13 +77,13 @@ function GrowthChart({ report }: { report: ReportSummary | null }) {
             <div className="relative h-9 rounded-app bg-ink/5">
               <span className="absolute bottom-1 top-1 left-1/2 w-px bg-ink/25" aria-hidden />
               <span
-                className={positive ? "progress-fill absolute top-2 h-5 rounded-app bg-coral" : "progress-fill absolute top-2 h-5 rounded-app bg-leaf"}
+                className={positive ? "progress-fill absolute top-2 h-5 rounded-app bg-danger" : "progress-fill absolute top-2 h-5 rounded-app bg-success"}
                 style={positive ? { left: "50%", width: `${width}%` } : { right: "50%", width: `${width}%` }}
                 aria-hidden
               />
             </div>
             <div className="flex items-center justify-between gap-3 md:justify-end">
-              <span className={positive ? "font-semibold text-coral" : "font-semibold text-leaf"}>
+              <span className={positive ? "font-semibold text-danger" : "font-semibold text-success"}>
                 {positive ? "+" : ""}{formatBRL(item.delta)}
               </span>
               <span className="rounded-app bg-ink/5 px-2 py-1 text-xs font-semibold text-muted">{percentLabel}</span>
@@ -130,8 +130,8 @@ export default function RelatoriosPage() {
     [report]
   );
   const trendRows = report?.dashboard.monthlyTrend || [];
-  const csvFilename = `pulsar-relatorio-${month}.csv`;
-  const pdfFilename = `pulsar-relatorio-${month}.pdf`;
+  const csvFilename = `trevo-relatorio-${month}.csv`;
+  const pdfFilename = `trevo-relatorio-${month}.pdf`;
   const chartGrid = effectiveTheme === "dark" ? "#2D3E55" : "#E5E7EB";
   const chartText = effectiveTheme === "dark" ? "#96A4B8" : "#6D7B8D";
   const chartStroke = effectiveTheme === "dark" ? "#E8EFF7" : "#102033";
@@ -185,7 +185,7 @@ export default function RelatoriosPage() {
           />
           <div className="grid gap-3 lg:grid-cols-[1fr_1fr]">
             <div className="rounded-app border border-line bg-surface/85 p-4">
-              <span className="text-xs font-bold uppercase tracking-normal text-muted">Ritmo Score</span>
+              <span className="text-xs font-bold uppercase tracking-normal text-muted">Score Trevo</span>
               <strong className="metric-number mt-1 block text-3xl">{report?.score.score || "--"}</strong>
               <p className="text-sm text-muted">{report?.score.label || "Aguardando dados do mês."}</p>
             </div>
@@ -291,7 +291,7 @@ export default function RelatoriosPage() {
           <div className="grid gap-2 md:grid-cols-2">
             {(report?.alerts || []).slice(0, 4).map((alert, index) => (
               <article className="interactive-list-item flex gap-3 rounded-app border border-line bg-surface/85 p-3 text-sm" key={`${alert.message}-${index}`}>
-                <AlertTriangle className={alert.type === "danger" ? "mt-0.5 shrink-0 text-coral" : "mt-0.5 shrink-0 text-amber"} size={18} aria-hidden />
+                <AlertTriangle className={alert.type === "danger" ? "mt-0.5 shrink-0 text-danger" : "mt-0.5 shrink-0 text-warning"} size={18} aria-hidden />
                 <div>
                   <strong className="block">{alert.category}</strong>
                   <span className="text-muted">{alert.message}</span>

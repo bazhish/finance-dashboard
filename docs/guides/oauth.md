@@ -1,13 +1,13 @@
-# Login social (OAuth) - Pulsa
+# Login social (OAuth) - Trevo
 
 ## Fluxo
 
 1. O frontend chama `GET /api/auth/oauth/providers` para saber quais provedores estao habilitados.
 2. O usuario clica em um provedor e e redirecionado para `GET /api/auth/oauth/{provider}/authorize`.
-3. O backend gera um `state` anti-CSRF com TTL de 10 minutos, grava o mesmo valor em cookie HttpOnly `pulsar_oauth_state` e redireciona para o provedor.
+3. O backend gera um `state` anti-CSRF com TTL de 10 minutos, grava o mesmo valor em cookie HttpOnly `trevo_oauth_state` e redireciona para o provedor.
 4. O provedor retorna para `GET /api/auth/oauth/{provider}/callback?code=...&state=...`.
-5. O backend troca o `code` por token do provedor, valida e-mail verificado, cria ou vincula o usuario e emite o JWT do Pulsa.
-6. O backend grava o JWT em cookie HttpOnly `pulsa_access_token`, limpa o cookie de `state` e redireciona para `OAUTH_FRONTEND_CALLBACK_URL?session=1`.
+5. O backend troca o `code` por token do provedor, valida e-mail verificado, cria ou vincula o usuario e emite o JWT do Trevo.
+6. O backend grava o JWT em cookie HttpOnly `trevo_access_token`, limpa o cookie de `state` e redireciona para `OAUTH_FRONTEND_CALLBACK_URL?session=1`.
 7. A pagina `/oauth/callback` reconhece a sessao, grava apenas um indicativo local de sessao ativa e envia o usuario ao dashboard.
 
 ## Variaveis de ambiente

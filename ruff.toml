@@ -1,0 +1,21 @@
+# Conjunto de regras explícito: sem isto o `ruff check .` do CI muda de
+# comportamento a cada release do ruff (o requirements permite qualquer >=0.4).
+target-version = "py312"
+line-length = 140
+
+[lint]
+select = ["E4", "E7", "E9", "F", "I", "UP", "B", "SIM", "DTZ"]
+ignore = [
+  # FastAPI declara dependências como default de parâmetro (Depends/Query/File);
+  # é o idioma do framework, não o antipadrão que a B008 procura.
+  "B008",
+  # As datas do domínio (transação, mês de fatura) são datas puras, sem hora:
+  # o strptime existe só para validar/normalizar o texto e o valor vira .date()
+  # logo em seguida. Timezone aqui não significaria nada.
+  "DTZ007",
+]
+
+[lint.per-file-ignores]
+# Os testes comparam hashes e valores monetários com Decimal("...") de propósito,
+# para deixar explícito que a entrada é textual.
+"tests/**" = ["DTZ"]

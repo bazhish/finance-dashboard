@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { KeyboardEvent, PointerEvent } from "react";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen } from "@/components/icons";
+import { TrevoMark } from "@/components/TrevoMark";
 import { IconButton } from "@/components/IconButton";
 import { SidebarItem } from "@/components/SidebarItem";
 import { Tooltip } from "@/components/Tooltip";
@@ -29,19 +30,19 @@ export function Sidebar({ compact = false, expandedWidth = 280, onResizeKeyDown,
     >
       <div className={`flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-4 ${compact ? "items-center" : ""}`}>
         <div className={`mb-6 flex w-full items-center gap-2 ${compact ? "justify-center" : "justify-between"}`}>
-          <Tooltip disabled={!compact} label="Pulsar" side="right">
+          <Tooltip disabled={!compact} label="Trevo" side="right">
             <Link
               aria-label={compact ? "Ir para o Resumo" : undefined}
-              className={`focus-ring interactive-card flex min-w-0 items-center gap-3 rounded-app border border-line bg-gradient-to-br from-pulse/10 to-surface p-2 shadow-sm ${compact ? "justify-center" : "flex-1"}`}
+              className={`focus-ring interactive-card flex min-w-0 items-center gap-3 rounded-app border border-line bg-gradient-to-br from-leaf/10 to-surface p-2 shadow-sm ${compact ? "justify-center" : "flex-1"}`}
               href="/dashboard"
             >
-              <span className={`flex shrink-0 items-center justify-center rounded-app bg-pulse font-black text-white ${compact ? "h-9 w-9 text-base" : "h-10 w-10 text-lg"}`}>
-                P
+              <span className={`flex shrink-0 items-center justify-center rounded-app bg-leaf-50 ${compact ? "h-9 w-9" : "h-10 w-10"}`}>
+                <TrevoMark className={compact ? "h-6 w-6" : "h-7 w-7"} />
               </span>
               {compact ? null : (
                 <span className="min-w-0">
-                  <strong className="block truncate leading-tight text-ink">Pulsar</strong>
-                  <small className="block truncate text-muted">Seu dinheiro no ritmo</small>
+                  <strong className="block truncate font-display leading-tight text-ink">Trevo</strong>
+                  <small className="block truncate text-muted">Sorte dá trabalho. A gente ajuda.</small>
                 </span>
               )}
             </Link>
@@ -77,7 +78,7 @@ export function Sidebar({ compact = false, expandedWidth = 280, onResizeKeyDown,
         aria-valuemax={360}
         aria-valuemin={84}
         aria-valuenow={Math.round(width)}
-        className="absolute inset-y-0 right-0 w-3 cursor-col-resize touch-none outline-none after:absolute after:inset-y-4 after:left-1/2 after:w-px after:-translate-x-1/2 after:bg-transparent after:transition after:duration-150 focus-visible:after:bg-pulse hover:after:bg-pulse/60"
+        className="absolute inset-y-0 right-0 w-3 cursor-col-resize touch-none outline-none after:absolute after:inset-y-4 after:left-1/2 after:w-px after:-translate-x-1/2 after:bg-transparent after:transition after:duration-150 focus-visible:after:bg-leaf hover:after:bg-leaf/60"
         onKeyDown={onResizeKeyDown}
         onPointerDown={onResizeStart}
         role="separator"

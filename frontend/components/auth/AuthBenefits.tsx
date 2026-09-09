@@ -1,9 +1,9 @@
-import { BadgeCheck, LineChart, Shield } from "lucide-react";
+import { BadgeCheck, LineChart, Shield } from "@/components/icons";
 
 const benefits = [
   {
     icon: LineChart,
-    title: "Ritmo claro",
+    title: "Clareza no mês",
     text: "Saiba quanto pode gastar hoje sem planilhas complexas."
   },
   {
@@ -23,7 +23,7 @@ export function AuthBenefits({ compact = false }: Readonly<{ compact?: boolean }
     <ul className={`grid gap-2 ${compact ? "grid-cols-1" : "sm:grid-cols-3"}`}>
       {benefits.map((item) => (
         <li key={item.title} className="glass-panel p-3">
-          <item.icon size={18} className="text-pulse" />
+          <item.icon size={18} className="text-leaf" />
           <p className="mt-2 text-sm font-bold text-ink">{item.title}</p>
           <p className="mt-1 text-xs text-muted">{item.text}</p>
         </li>

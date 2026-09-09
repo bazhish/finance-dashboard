@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowDownCircle, ArrowUpCircle, LoaderCircle, Pencil, Plus, ReceiptText, Trash2 } from "lucide-react";
+import { ArrowDownCircle, ArrowUpCircle, LoaderCircle, Pencil, Plus, ReceiptText, Trash2 } from "@/components/icons";
 import { EmptyState } from "@/components/EmptyState";
 import { ExpenseForm, type MovementFormState } from "@/components/ExpenseForm";
 import { FeedbackMessage } from "@/components/FeedbackMessage";
@@ -48,7 +48,6 @@ export default function TransacoesPage() {
   const [sourceFilter, setSourceFilter] = useState("");
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -191,22 +190,22 @@ export default function TransacoesPage() {
 
         <section className="mb-4 grid gap-3 sm:grid-cols-2">
           <button
-            className="focus-ring rounded-app border border-coral/25 bg-coral/10 p-4 text-left shadow-soft hover:bg-coral/15 transition"
+            className="focus-ring rounded-app border border-danger/25 bg-danger/10 p-4 text-left shadow-soft hover:bg-danger/15 transition"
             type="button"
             onClick={() => startNew("expense")}
             aria-label="Cadastrar nova despesa"
           >
-            <ArrowDownCircle className="text-coral" size={22} />
+            <ArrowDownCircle className="text-danger" size={22} />
             <strong className="mt-2 block">Nova despesa</strong>
             <span className="mt-1 block text-sm text-muted">Gasto, compra, conta ou pagamento feito no mês.</span>
           </button>
           <button
-            className="focus-ring rounded-app border border-leaf/25 bg-leaf/10 p-4 text-left shadow-soft hover:bg-leaf/15 transition"
+            className="focus-ring rounded-app border border-success/25 bg-success/10 p-4 text-left shadow-soft hover:bg-success/15 transition"
             type="button"
             onClick={() => startNew("income")}
             aria-label="Cadastrar nova entrada"
           >
-            <ArrowUpCircle className="text-leaf" size={22} />
+            <ArrowUpCircle className="text-success" size={22} />
             <strong className="mt-2 block">Nova entrada</strong>
             <span className="mt-1 block text-sm text-muted">Salário, receita extra, freelance ou dinheiro recebido.</span>
           </button>
@@ -234,8 +233,8 @@ export default function TransacoesPage() {
             />
           )}
           <div className="mt-4 flex flex-wrap gap-2">
-            <button className="btn-primary" type="submit">
-              <Plus size={16} />
+            <button className="btn-primary" disabled={saving} type="submit">
+              {saving ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Plus size={16} />}
               {form.id ? "Salvar edição" : form.type === "income" ? "Cadastrar entrada" : "Cadastrar despesa"}
             </button>
             {form.id ? (
@@ -298,8 +297,8 @@ export default function TransacoesPage() {
                     <span
                       className={
                         item.type === "income"
-                          ? "mb-1 inline-flex rounded-app bg-leaf/10 px-2 py-1 text-xs font-semibold text-leaf"
-                          : "mb-1 inline-flex rounded-app bg-coral/10 px-2 py-1 text-xs font-semibold text-coral"
+                          ? "mb-1 inline-flex rounded-app bg-success/10 px-2 py-1 text-xs font-semibold text-success"
+                          : "mb-1 inline-flex rounded-app bg-danger/10 px-2 py-1 text-xs font-semibold text-danger"
                       }
                     >
                       {item.type === "income" ? "Entrada" : "Despesa"}
@@ -310,7 +309,7 @@ export default function TransacoesPage() {
                     </p>
                   </div>
                   <div className="flex items-center justify-between gap-2 sm:justify-end">
-                    <strong className={item.type === "income" ? "text-leaf" : "text-coral"}>
+                    <strong className={item.type === "income" ? "text-success" : "text-danger"}>
                       {item.type === "income" ? "+" : "-"}
                       {formatBRL(item.amount)}
                     </strong>

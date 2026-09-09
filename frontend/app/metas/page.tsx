@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays } from "@/components/icons";
 import { DailyGoalCalendar } from "@/components/DailyGoalCalendar";
 import { FeedbackMessage } from "@/components/FeedbackMessage";
 import { FirstTimeExplainer } from "@/components/FirstTimeExplainer";
@@ -36,7 +36,7 @@ export default function MetasPage() {
     await api.settings(token, { dailyGoal: goal.recommendedDailyGoal });
     const nextGoal = await api.goals(token, month);
     setGoal(nextGoal);
-    setMessage("Meta diária definida com a recomendação do Pulsa.");
+    setMessage("Meta diária definida com a recomendação do Trevo.");
   }
 
   return (
@@ -63,7 +63,7 @@ export default function MetasPage() {
             value={(goal?.dailyGoal || 0) > 0 ? formatBRL(goal?.dailyGoal || 0) : "Não definida"}
             note={(goal?.dailyGoal || 0) > 0 ? "Definida por você" : "Você ainda não definiu uma meta diária"}
           />
-          <KpiCard label="Recomendado pelo Pulsa" value={formatBRL(goal?.recommendedDailyGoal || 0)} tone="good" />
+          <KpiCard label="Recomendado pelo Trevo" value={formatBRL(goal?.recommendedDailyGoal || 0)} tone="good" />
           <KpiCard label="Permitido restante" value={formatBRL(goal?.allowedRemaining || 0)} tone={(goal?.allowedRemaining || 0) < 0 ? "danger" : "neutral"} />
           <KpiCard label="Projeção de gasto" value={formatBRL(goal?.projectedClosing || 0)} tone={goal?.goalStatus === "red" ? "danger" : goal?.goalStatus === "yellow" ? "warning" : "good"} />
         </div>

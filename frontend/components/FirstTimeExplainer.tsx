@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { X } from "@/components/icons";
 import { useDelayedPresence } from "@/lib/useDelayedPresence";
 
 type FirstTimeExplainerProps = {
@@ -26,7 +26,7 @@ export function FirstTimeExplainer({ storageKey, title, description }: FirstTime
   if (!shouldRender) return null;
 
   return (
-    <section className={`mb-4 rounded-app border border-pulse/20 bg-gradient-to-r from-pulse/10 to-surface p-4 shadow-soft ${state === "open" ? "animate-pop-in" : "animate-pop-out"}`}>
+    <section className={`mb-4 rounded-app border border-leaf/20 bg-gradient-to-r from-leaf/10 to-surface p-4 shadow-soft ${state === "open" ? "animate-pop-in" : "animate-pop-out"}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="font-bold">{title}</h2>

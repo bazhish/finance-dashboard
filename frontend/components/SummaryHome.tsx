@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { BarChart3, FileUp, Layers3, PieChart as PieIcon, ReceiptText, Wallet } from "lucide-react";
+import { BarChart3, FileUp, Layers3, PieChart as PieIcon, ReceiptText, Wallet } from "@/components/icons";
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ActionRecommendationCard } from "@/components/ActionRecommendationCard";
 import { EmptyState } from "@/components/EmptyState";
@@ -78,7 +78,7 @@ export function SummaryHome({ data, chartsReady, onEditPlanning }: SummaryHomePr
         <KpiCard label="Salário do mês" value={formatBRL(dashboard?.salaryBase || 0)} note={`${dashboard?.salaryCommittedPercent || 0}% comprometido`} />
         <KpiCard label="Entradas" value={formatBRL(dashboard?.inflow || 0)} tone="good" />
         <KpiCard label="Saídas" value={formatBRL(dashboard?.outflow || 0)} tone={dashboard && dashboard.outflow > dashboard.salaryBase ? "danger" : "neutral"} />
-        <KpiCard label="Ritmo Score" value={String(data?.score.score || "--")} note={data?.score.label} tone={tone} />
+        <KpiCard label="Score Trevo" value={String(data?.score.score || "--")} note={data?.score.label} tone={tone} />
       </div>
 
       <section className="app-card p-4">
@@ -125,7 +125,7 @@ export function SummaryHome({ data, chartsReady, onEditPlanning }: SummaryHomePr
               {pieData.slice(0, 6).map((item) => (
                 <div
                   key={item.name}
-                  className={`interactive-list-item flex items-center justify-between gap-3 rounded-app border p-3 text-sm shadow-sm ${activeCategory === item.name ? "border-pulse/60 bg-pulse/10" : "border-line bg-surface/75"}`}
+                  className={`interactive-list-item flex items-center justify-between gap-3 rounded-app border p-3 text-sm shadow-sm ${activeCategory === item.name ? "border-leaf/60 bg-leaf/10" : "border-line bg-surface/75"}`}
                   onMouseEnter={() => setActiveCategory(item.name)}
                   onMouseLeave={() => setActiveCategory(null)}
                 >
@@ -206,7 +206,7 @@ export function SummaryHome({ data, chartsReady, onEditPlanning }: SummaryHomePr
                 {paymentData.map((item) => (
                   <div
                     key={item.payment_method}
-                    className={`interactive-list-item flex items-center justify-between rounded-app border p-3 text-sm shadow-sm ${activePayment === item.payment_method ? "border-pulse/60 bg-pulse/10" : "border-line bg-surface/75"}`}
+                    className={`interactive-list-item flex items-center justify-between rounded-app border p-3 text-sm shadow-sm ${activePayment === item.payment_method ? "border-leaf/60 bg-leaf/10" : "border-line bg-surface/75"}`}
                     onMouseEnter={() => setActivePayment(item.payment_method)}
                     onMouseLeave={() => setActivePayment(null)}
                   >
@@ -256,8 +256,8 @@ export function SummaryHome({ data, chartsReady, onEditPlanning }: SummaryHomePr
           { href: "/importar", icon: FileUp, title: "Importar extrato CSV", description: "Traga movimentações do banco e revise tudo antes de confirmar." },
           { href: "/relatorios", icon: BarChart3, title: "Ver relatório do mês", description: "Analise categorias, formas de pagamento e evolução mensal." }
         ].map((action) => (
-          <Link className="app-card interactive-card focus-ring p-4 transition hover:-translate-y-0.5 hover:border-pulse/50" href={action.href} key={action.href}>
-            <span className="flex h-10 w-10 items-center justify-center rounded-app bg-pulse/10 text-pulse">
+          <Link className="app-card interactive-card focus-ring p-4 transition hover:-translate-y-0.5 hover:border-leaf/50" href={action.href} key={action.href}>
+            <span className="flex h-10 w-10 items-center justify-center rounded-app bg-leaf/10 text-leaf">
               <action.icon size={20} aria-hidden />
             </span>
             <strong className="mt-3 block text-sm text-ink">{action.title}</strong>

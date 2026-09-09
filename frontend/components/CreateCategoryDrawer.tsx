@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Plus } from "lucide-react";
+import { X, Plus } from "@/components/icons";
 import { useDelayedPresence } from "@/lib/useDelayedPresence";
 import type { Category, TransactionType } from "@/types/finance";
 
@@ -120,9 +120,9 @@ export function CreateCategoryDrawer({
                   className={`interactive-list-item p-3 rounded-app border-2 text-sm font-semibold transition ${
                     form.type === type
                       ? type === "expense"
-                        ? "border-coral bg-coral/10 text-coral"
-                        : "border-leaf bg-leaf/10 text-leaf"
-                      : "theme-control border-line hover:border-pulse/50"
+                        ? "border-danger bg-danger/10 text-danger"
+                        : "border-success bg-success/10 text-success"
+                      : "theme-control border-line hover:border-leaf/50"
                   }`}
                   disabled={loading}
                 >
@@ -164,7 +164,7 @@ export function CreateCategoryDrawer({
                   className={`interactive-list-item h-10 text-xl rounded-app border-2 flex items-center justify-center transition ${
                     form.icon === icon
                       ? "scale-110 border-ink bg-surface/75"
-                      : "border-line hover:border-pulse hover:bg-pulse/10"
+                      : "border-line hover:border-leaf hover:bg-leaf/10"
                   }`}
                   aria-label={`Selecionar ícone ${icon}`}
                   disabled={loading}
@@ -176,7 +176,7 @@ export function CreateCategoryDrawer({
           </label>
 
           {error && (
-            <p className="feedback-message text-sm text-coral bg-coral/10 p-3 rounded-app">
+            <p className="feedback-message text-sm text-danger bg-danger/10 p-3 rounded-app">
               {error}
             </p>
           )}

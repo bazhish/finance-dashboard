@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Política de Privacidade — Pulsa",
-  description: "Como o Pulsa trata seus dados pessoais conforme a LGPD."
+  title: "Política de Privacidade — Trevo",
+  description: "Como o Trevo trata seus dados pessoais conforme a LGPD."
 };
 
 const POLICY_VERSION = "2025-07-01";
@@ -10,7 +10,7 @@ const POLICY_VERSION = "2025-07-01";
 export default function PrivacidadePage() {
   return (
     <main className="mx-auto max-w-3xl px-5 py-10">
-      <Link className="text-sm font-bold text-plum" href="/cadastro">
+      <Link className="text-sm font-bold text-leaf-700" href="/cadastro">
         ← Voltar
       </Link>
 
@@ -67,7 +67,7 @@ export default function PrivacidadePage() {
         <h2 className="text-lg font-bold">8. Encarregado (DPO) e contato</h2>
         <p className="text-muted">
           Para exercer seus direitos ou tirar dúvidas sobre privacidade, fale com o encarregado de dados pelo
-          e-mail <span className="font-semibold text-ink">privacidade@pulsa.app</span>.
+          e-mail <span className="font-semibold text-ink">privacidade@trevo.app</span>.
         </p>
       </section>
     </main>

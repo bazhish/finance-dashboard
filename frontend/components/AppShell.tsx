@@ -6,8 +6,8 @@ import { usePathname } from "next/navigation";
 import { BottomNav } from "@/components/BottomNav";
 import { Sidebar } from "@/components/Sidebar";
 
-const SIDEBAR_WIDTH_KEY = "pulsar_sidebar_width";
-const SIDEBAR_COMPACT_KEY = "pulsar_sidebar_compact";
+const SIDEBAR_WIDTH_KEY = "trevo_sidebar_width";
+const SIDEBAR_COMPACT_KEY = "trevo_sidebar_compact";
 const DEFAULT_WIDTH = 280;
 const COMPACT_WIDTH = 84;
 const MIN_EXPANDED_WIDTH = 184;

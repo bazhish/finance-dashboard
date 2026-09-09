@@ -2,7 +2,7 @@
 
 ## Identidade
 
-- Marca no app: texto `Pulsa` e monograma simples `P`.
+- Marca no app: texto `Trevo` e monograma simples `P`.
 - Nao duplicar logos antigas nesta pasta sem necessidade.
 
 ## Screenshots (placeholders)

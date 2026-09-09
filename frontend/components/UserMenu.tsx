@@ -32,7 +32,7 @@ function UserAvatar({ compact, user }: { compact: boolean; user: User | null }) 
   }
 
   return (
-    <span className={`${sizeClass} flex shrink-0 items-center justify-center rounded-app bg-pulse text-sm font-black text-white shadow-sm`} aria-hidden>
+    <span className={`${sizeClass} flex shrink-0 items-center justify-center rounded-app bg-leaf text-sm font-black text-white shadow-sm`} aria-hidden>
       {initials}
     </span>
   );
@@ -55,10 +55,10 @@ export function UserMenu({ compact }: UserMenuProps) {
       });
 
     loadUser();
-    window.addEventListener("pulsar:user-updated", loadUser);
+    window.addEventListener("trevo:user-updated", loadUser);
     return () => {
       active = false;
-      window.removeEventListener("pulsar:user-updated", loadUser);
+      window.removeEventListener("trevo:user-updated", loadUser);
     };
   }, [token]);
 

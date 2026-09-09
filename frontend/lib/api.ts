@@ -29,7 +29,7 @@ type CacheEntry = {
 const responseCache = new Map<string, CacheEntry>();
 const pendingRequests = new Map<string, Promise<unknown>>();
 
-const CSRF_COOKIE = "pulsa_csrf";
+const CSRF_COOKIE = "trevo_csrf";
 const CSRF_HEADER = "X-CSRF-Token";
 const CSRF_EXEMPT_PATHS = new Set(["/api/auth/login", "/api/auth/register"]);
 

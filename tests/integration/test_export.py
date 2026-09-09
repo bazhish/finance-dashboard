@@ -132,7 +132,7 @@ async def test_csv_and_pdf_exports(client, auth_headers):
     assert "text/csv" in csv_response.headers["content-type"]
     assert csv_response.headers["cache-control"] == "no-store"
     assert csv_response.content.startswith("\ufeff".encode())
-    assert 'filename="pulsar-relatorio-2024-05.csv"' in csv_response.headers["content-disposition"]
+    assert 'filename="trevo-relatorio-2024-05.csv"' in csv_response.headers["content-disposition"]
     csv_text = csv_response.content.decode("utf-8-sig")
     assert csv_text.splitlines()[0] == (
         "Data;Tipo;Nome;Categoria;Forma de pagamento;Valor;Origem;Observa\u00e7\u00f5es;Parcela"
@@ -143,12 +143,12 @@ async def test_csv_and_pdf_exports(client, auth_headers):
     pdf_response = await client.get("/api/export/pdf?month=2024-05", headers=auth_headers)
     assert pdf_response.status_code == 200
     assert pdf_response.headers["cache-control"] == "no-store"
-    assert 'filename="pulsar-relatorio-2024-05.pdf"' in pdf_response.headers["content-disposition"]
+    assert 'filename="trevo-relatorio-2024-05.pdf"' in pdf_response.headers["content-disposition"]
     assert pdf_response.content.startswith(b"%PDF")
     assert len(pdf_response.content) > 3000
     pdf_text = pdf_response.content.decode("latin-1", errors="ignore")
     for section in [
-        "Pulsar",
+        "Trevo",
         "Relat\u00f3rio dashboard",
         "Resumo mensal",
         "Categorias",

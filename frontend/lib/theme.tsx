@@ -11,7 +11,7 @@ type ThemeContextValue = {
   setPreference: (preference: ThemePreference) => void;
 };
 
-const THEME_STORAGE_KEY = "pulsar_theme_preference";
+const THEME_STORAGE_KEY = "trevo_theme_preference";
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function systemTheme() {

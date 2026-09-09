@@ -1,4 +1,4 @@
-import { Trash2 } from "lucide-react";
+import { Trash2 } from "@/components/icons";
 import { IconButton } from "@/components/IconButton";
 import { formatBRL } from "@/lib/format";
 import type { BudgetItem } from "@/types/finance";
@@ -10,15 +10,15 @@ const statusLabel = {
 };
 
 const statusClass = {
-  ok: "bg-leaf/10 text-leaf",
-  attention: "bg-amber/15 text-ink",
-  over: "bg-coral/10 text-coral"
+  ok: "bg-success/10 text-success",
+  attention: "bg-warning/15 text-ink",
+  over: "bg-danger/10 text-danger"
 };
 
 const barClass = {
-  ok: "bg-leaf",
-  attention: "bg-amber",
-  over: "bg-coral"
+  ok: "bg-success",
+  attention: "bg-warning",
+  over: "bg-danger"
 };
 
 export function BudgetCategoryCard({
@@ -53,7 +53,7 @@ export function BudgetCategoryCard({
         </div>
         <div>
           <dt className="text-muted">Restante</dt>
-          <dd className={item.remaining < 0 ? "metric-number text-coral" : "metric-number text-leaf"}>{formatBRL(item.remaining)}</dd>
+          <dd className={item.remaining < 0 ? "metric-number text-danger" : "metric-number text-success"}>{formatBRL(item.remaining)}</dd>
         </div>
       </dl>
       <div className="mt-4 h-2 overflow-hidden rounded-full bg-ink/10">

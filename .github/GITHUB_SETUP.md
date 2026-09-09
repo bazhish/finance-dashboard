@@ -4,7 +4,7 @@ Aplique no GitHub (Settings) após o push desta reorganização.
 
 ## About
 
-- **Description:** Pulsar — assistente financeiro pessoal mobile first para salário, gastos, metas, orçamento, parcelas, importação CSV e relatórios.
+- **Description:** Trevo — assistente financeiro pessoal mobile first para salário, gastos, metas, orçamento, parcelas, importação CSV e relatórios.
 - **Website:** URL de produção ou demo (se houver)
 - **Topics:** `personal-finance`, `finance-dashboard`, `budgeting`, `fastapi`, `nextjs`, `typescript`, `postgresql`, `tailwindcss`, `fintech`, `open-source`
 

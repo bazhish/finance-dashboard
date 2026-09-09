@@ -1,12 +1,14 @@
+import { TrevoMark } from "@/components/TrevoMark";
+
 export function AuthBrand() {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-app border border-line bg-pulse text-lg font-black text-white shadow-soft">
-        P
-      </div>
+      <span className="flex h-11 w-11 items-center justify-center rounded-app border border-line bg-leaf-50 shadow-soft">
+        <TrevoMark className="h-7 w-7" />
+      </span>
       <div>
-        <p className="text-xl font-black tracking-tight text-ink">Pulsar</p>
-        <p className="text-sm font-semibold text-pulse">financas no ritmo certo</p>
+        <p className="font-display text-xl font-extrabold tracking-tight text-ink">Trevo</p>
+        <p className="text-sm font-semibold text-leaf-600">suas finanças com sorte e método</p>
       </div>
     </div>
   );

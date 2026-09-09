@@ -4,8 +4,8 @@ import logging
 import os
 import secrets
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Optional
 from urllib.parse import urlencode
 
 import httpx
@@ -15,10 +15,10 @@ from jose import JWTError, jwt
 
 from app.core.config import settings
 
-logger = logging.getLogger("ritmo_financeiro.oauth")
+logger = logging.getLogger("trevo.oauth")
 
 OAUTH_STATE_TTL_SECONDS = 10 * 60
-OAUTH_STATE_COOKIE = "pulsar_oauth_state"
+OAUTH_STATE_COOKIE = "trevo_oauth_state"
 OAUTH_STATE_ALG = "HS256"
 OAUTH_PROVIDERS = ("google", "github", "facebook")
 
@@ -129,7 +129,7 @@ def _facebook_profile(access_token: str, _: dict[str, str]) -> dict[str, str]:
     }
 
 
-def provider_config(provider: str) -> Optional[OAuthProviderConfig]:
+def provider_config(provider: str) -> OAuthProviderConfig | None:
     if provider == "google":
         client_id = _env("GOOGLE_CLIENT_ID")
         client_secret = _env("GOOGLE_CLIENT_SECRET")
@@ -213,7 +213,7 @@ def consume_oauth_state(state: str, provider: str, cookie_state: str | None) -> 
     try:
         payload = jwt.decode(state, settings.require_jwt_secret(), algorithms=[OAUTH_STATE_ALG])
     except JWTError:
-        raise HTTPException(status_code=400, detail="State OAuth inválido ou expirado.")
+        raise HTTPException(status_code=400, detail="State OAuth inválido ou expirado.") from None
     if payload.get("provider") != provider:
         raise HTTPException(status_code=400, detail="State OAuth inválido ou expirado.")
 

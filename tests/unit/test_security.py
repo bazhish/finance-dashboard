@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from fastapi import HTTPException
@@ -32,7 +32,7 @@ def test_create_access_token_contains_subject(monkeypatch):
 
 def test_expired_token_raises_jwterror():
     token = jwt.encode(
-        {"sub": "user-id", "exp": int((datetime.now(timezone.utc) - timedelta(seconds=1)).timestamp())},
+        {"sub": "user-id", "exp": int((datetime.now(UTC) - timedelta(seconds=1)).timestamp())},
         "unit-secret-key-for-tests-32-chars",
         algorithm="HS256",
     )

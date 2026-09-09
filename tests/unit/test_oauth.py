@@ -75,7 +75,7 @@ async def test_oauth_authorize_configured_sets_state_cookie(monkeypatch):
 
     assert response.status_code == 302
     assert "https://accounts.google.com/o/oauth2/v2/auth" in response.headers["location"]
-    assert "pulsar_oauth_state=" in response.headers["set-cookie"]
+    assert "trevo_oauth_state=" in response.headers["set-cookie"]
     assert "HttpOnly" in response.headers["set-cookie"]
 
 
@@ -91,4 +91,4 @@ async def test_oauth_callback_invalid_state_redirects(monkeypatch):
         )
     assert response.status_code == 302
     assert "error=" in response.headers["location"]
-    assert "pulsar_oauth_state=" in response.headers["set-cookie"]
+    assert "trevo_oauth_state=" in response.headers["set-cookie"]

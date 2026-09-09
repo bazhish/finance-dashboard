@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ReceiptText } from "lucide-react";
+import { ReceiptText } from "@/components/icons";
 import { DailyGoalCircle } from "@/components/DailyGoalCircle";
 import { EmptyState } from "@/components/EmptyState";
 import { formatBRL } from "@/lib/format";
@@ -68,15 +68,15 @@ export function DailyGoalCalendar({ goal, transactions = [] }: DailyGoalCalendar
         <dl className="mt-4 grid gap-2 text-sm">
           <div className="flex justify-between gap-3">
             <dt className="text-muted">Entradas do dia</dt>
-            <dd className="font-semibold text-leaf">{formatBRL(dailyIncome)}</dd>
+            <dd className="font-semibold text-success">{formatBRL(dailyIncome)}</dd>
           </div>
           <div className="flex justify-between gap-3">
             <dt className="text-muted">Despesas do dia</dt>
-            <dd className="font-semibold text-coral">{formatBRL(dailyExpense)}</dd>
+            <dd className="font-semibold text-danger">{formatBRL(dailyExpense)}</dd>
           </div>
           <div className="flex justify-between gap-3">
             <dt className="text-muted">Resultado do dia</dt>
-            <dd className={dailyNet < 0 ? "font-semibold text-coral" : "font-semibold text-leaf"}>{formatBRL(dailyNet)}</dd>
+            <dd className={dailyNet < 0 ? "font-semibold text-danger" : "font-semibold text-success"}>{formatBRL(dailyNet)}</dd>
           </div>
           <div className="flex justify-between gap-3">
             <dt className="text-muted">Meta de referencia</dt>
@@ -84,7 +84,7 @@ export function DailyGoalCalendar({ goal, transactions = [] }: DailyGoalCalendar
           </div>
           <div className="flex justify-between gap-3">
             <dt className="text-muted">Diferenca da meta diaria</dt>
-            <dd className={dailyDelta < 0 ? "font-semibold text-coral" : "font-semibold text-leaf"}>{formatBRL(dailyDelta)}</dd>
+            <dd className={dailyDelta < 0 ? "font-semibold text-danger" : "font-semibold text-success"}>{formatBRL(dailyDelta)}</dd>
           </div>
         </dl>
         <div className="mt-4">
@@ -93,12 +93,12 @@ export function DailyGoalCalendar({ goal, transactions = [] }: DailyGoalCalendar
             {activeTransactions.map((item) => (
               <div key={item.id} className="flex items-center justify-between gap-3 rounded-app bg-surface-muted/60 p-2 text-sm">
                 <span className="min-w-0">
-                  <span className={item.type === "income" ? "mr-2 rounded-app bg-leaf/10 px-2 py-0.5 text-[11px] font-semibold text-leaf" : "mr-2 rounded-app bg-coral/10 px-2 py-0.5 text-[11px] font-semibold text-coral"}>
+                  <span className={item.type === "income" ? "mr-2 rounded-app bg-success/10 px-2 py-0.5 text-[11px] font-semibold text-success" : "mr-2 rounded-app bg-danger/10 px-2 py-0.5 text-[11px] font-semibold text-danger"}>
                     {item.type === "income" ? "Entrada" : "Despesa"}
                   </span>
                   <span className="truncate">{item.title}</span>
                 </span>
-                <strong className={item.type === "income" ? "text-leaf" : "text-coral"}>
+                <strong className={item.type === "income" ? "text-success" : "text-danger"}>
                   {item.type === "income" ? "+" : "-"}
                   {formatBRL(item.amount)}
                 </strong>

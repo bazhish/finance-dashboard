@@ -9,9 +9,9 @@ type DailyGoalCircleProps = {
 
 function tone(day: GoalDay) {
   if (day.status === "empty") return { color: "rgb(var(--color-line))", label: "Sem gasto", className: "text-muted" };
-  if (day.status === "over") return { color: "#DC4C3F", label: "Acima", className: "text-coral" };
+  if (day.status === "over") return { color: "#DC4C3F", label: "Acima", className: "text-danger" };
   if (day.progress >= 80) return { color: "#F4C430", label: "Atencao", className: "text-ink" };
-  return { color: "#16A34A", label: "Dentro", className: "text-leaf" };
+  return { color: "#16A34A", label: "Dentro", className: "text-success" };
 }
 
 export function DailyGoalCircle({ day, active, onSelect }: DailyGoalCircleProps) {
@@ -20,7 +20,7 @@ export function DailyGoalCircle({ day, active, onSelect }: DailyGoalCircleProps)
 
   return (
     <button
-      className={`focus-ring min-h-[108px] rounded-app border bg-surface/95 p-2 text-left shadow-soft transition hover:-translate-y-0.5 ${active ? "border-pulse ring-2 ring-pulse/20" : "border-line"}`}
+      className={`focus-ring min-h-[108px] rounded-app border bg-surface/95 p-2 text-left shadow-soft transition hover:-translate-y-0.5 ${active ? "border-leaf ring-2 ring-leaf/20" : "border-line"}`}
       type="button"
       onClick={onSelect}
     >
@@ -34,7 +34,7 @@ export function DailyGoalCircle({ day, active, onSelect }: DailyGoalCircleProps)
         <strong className="metric-number block text-xs">{formatBRL(day.spent)}</strong>
         <span className={`text-[11px] font-semibold ${state.className}`}>{Math.round(progress)}% / {state.label}</span>
         {day.net !== 0 ? (
-          <span className={day.net < 0 ? "mt-1 block text-[11px] font-semibold text-coral" : "mt-1 block text-[11px] font-semibold text-leaf"}>
+          <span className={day.net < 0 ? "mt-1 block text-[11px] font-semibold text-danger" : "mt-1 block text-[11px] font-semibold text-success"}>
             {day.net < 0 ? "" : "+"}{formatBRL(day.net)}
           </span>
         ) : null}

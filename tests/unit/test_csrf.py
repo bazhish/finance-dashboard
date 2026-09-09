@@ -15,7 +15,7 @@ async def test_csrf_rejects_cookie_post_without_token():
         response = await client.post(
             "/api/transactions",
             json={},
-            cookies={"pulsa_access_token": "fake-session"},
+            cookies={"trevo_access_token": "fake-session"},
         )
     assert response.status_code == 403
     assert "CSRF" in response.json()["detail"]
@@ -29,7 +29,7 @@ async def test_csrf_rejects_on_mismatch():
             "/api/transactions",
             json={},
             headers={"X-CSRF-Token": "header-value"},
-            cookies={"pulsa_access_token": "fake-session", "pulsa_csrf": "cookie-value"},
+            cookies={"trevo_access_token": "fake-session", "trevo_csrf": "cookie-value"},
         )
     assert response.status_code == 403
 
@@ -43,7 +43,7 @@ async def test_csrf_exempts_bearer_requests():
             "/api/transactions",
             json={},
             headers={"Authorization": "Bearer invalid-token"},
-            cookies={"pulsa_access_token": "fake-session"},
+            cookies={"trevo_access_token": "fake-session"},
         )
     # Passes CSRF (not 403); fails later at auth instead.
     assert response.status_code != 403

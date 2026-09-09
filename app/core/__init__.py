@@ -1,1 +1,1 @@
-"""Core infrastructure modules for Ritmo Financeiro Pro."""
+"""Core infrastructure modules for Trevo."""

@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Info, LoaderCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2, Info, LoaderCircle } from "@/components/icons";
 
 type FeedbackTone = "success" | "error" | "info" | "loading";
 
@@ -9,17 +9,17 @@ type FeedbackMessageProps = {
 };
 
 const toneClass: Record<FeedbackTone, string> = {
-  success: "border-leaf/25 bg-leaf/10 text-ink",
-  error: "border-coral/25 bg-coral/10 text-ink",
-  info: "border-pulse/25 bg-pulse/10 text-ink",
-  loading: "border-sky/25 bg-sky/10 text-ink"
+  success: "border-success/25 bg-success/10 text-ink",
+  error: "border-danger/25 bg-danger/10 text-ink",
+  info: "border-leaf/25 bg-leaf/10 text-ink",
+  loading: "border-info/25 bg-info/10 text-ink"
 };
 
 const iconClass: Record<FeedbackTone, string> = {
-  success: "text-leaf",
-  error: "text-coral",
-  info: "text-pulse",
-  loading: "text-sky"
+  success: "text-success",
+  error: "text-danger",
+  info: "text-leaf",
+  loading: "text-info"
 };
 
 function iconForTone(tone: FeedbackTone) {

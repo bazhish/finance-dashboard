@@ -1,6 +1,6 @@
 "use client";
 
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal } from "@/components/icons";
 import { formatBRL } from "@/lib/format";
 import type { Settings } from "@/types/finance";
 
@@ -27,11 +27,11 @@ export function QuickSettingsCard({ settings, onEdit }: QuickSettingsCardProps) 
           <span className="text-muted">Salário</span>
           <strong className="metric-number">{formatBRL(settings?.monthly_income || 0)}</strong>
         </div>
-        <div className="interactive-list-item flex items-center justify-between gap-3 rounded-app bg-sky/10 px-3 py-2">
+        <div className="interactive-list-item flex items-center justify-between gap-3 rounded-app bg-info/10 px-3 py-2">
           <span className="text-muted">Reserva planejada</span>
           <strong className="metric-number">{formatBRL(settings?.reserve_amount || 0)}</strong>
         </div>
-        <div className="interactive-list-item flex items-center justify-between gap-3 rounded-app bg-plum/10 px-3 py-2">
+        <div className="interactive-list-item flex items-center justify-between gap-3 rounded-app bg-leaf-700/10 px-3 py-2">
           <span className="text-muted">Meta diária</span>
           <strong className="metric-number">{formatBRL(settings?.daily_goal || 0)}</strong>
         </div>

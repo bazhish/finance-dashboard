@@ -2,7 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, LogOut, Monitor, Moon, Repeat, Settings, Sun } from "lucide-react";
+import { Check, LogOut, Monitor, Moon, Repeat, Settings, Sun } from "@/components/icons";
 import { FeedbackMessage } from "@/components/FeedbackMessage";
 import { PageHeader } from "@/components/PageHeader";
 import { SectionIntro } from "@/components/SectionIntro";
@@ -69,7 +69,7 @@ export default function ConfiguracoesPage() {
         <section className="app-card p-4">
           <SectionIntro
             title="Tema"
-            description="Escolha uma aparencia confortavel para usar o Pulsa."
+            description="Escolha uma aparencia confortavel para usar o Trevo."
             helpText="Sistema acompanha a preferencia do dispositivo e fica salvo neste navegador."
           />
           <div className="grid gap-2 md:grid-cols-3">
@@ -80,7 +80,7 @@ export default function ConfiguracoesPage() {
                 <button
                   aria-pressed={active}
                   className={`focus-ring flex items-center gap-3 rounded-app border p-3 text-left transition ${
-                    active ? "border-pulse bg-pulse text-white shadow-soft" : "theme-control text-ink hover:border-pulse/50"
+                    active ? "border-leaf bg-leaf text-white shadow-soft" : "theme-control text-ink hover:border-leaf/50"
                   }`}
                   key={option.value}
                   onClick={() => setPreference(option.value)}

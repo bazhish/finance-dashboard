@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, Check, ChevronDown, FileSpreadsheet, FileUp, ListChecks, ShieldCheck, Wand2 } from "lucide-react";
+import { AlertTriangle, Check, ChevronDown, FileSpreadsheet, FileUp, ListChecks, ShieldCheck, Wand2 } from "@/components/icons";
 import { EmptyState } from "@/components/EmptyState";
 import { FeedbackMessage } from "@/components/FeedbackMessage";
 import { PageHeader } from "@/components/PageHeader";
@@ -89,11 +89,11 @@ function Stepper({ activeIndex }: { activeIndex: number }) {
           <li
             aria-current={active ? "step" : undefined}
             className={`rounded-app border p-3 text-sm shadow-sm transition ${
-              done ? "border-leaf/25 bg-leaf/10 text-ink" : active ? "border-pulse/40 bg-surface text-ink" : "border-line bg-surface/70 text-muted"
+              done ? "border-success/25 bg-success/10 text-ink" : active ? "border-leaf/40 bg-surface text-ink" : "border-line bg-surface/70 text-muted"
             }`}
             key={step.key}
           >
-            <span className={`mb-2 flex h-7 w-7 items-center justify-center rounded-app text-xs font-black ${done ? "bg-leaf text-white" : active ? "bg-pulse text-white" : "bg-ink/5 text-muted"}`}>
+            <span className={`mb-2 flex h-7 w-7 items-center justify-center rounded-app text-xs font-black ${done ? "bg-success text-white" : active ? "bg-leaf text-white" : "bg-ink/5 text-muted"}`}>
               {done ? <Check size={14} aria-hidden /> : index + 1}
             </span>
             <span className="block font-semibold">{step.label}</span>
@@ -107,9 +107,9 @@ function Stepper({ activeIndex }: { activeIndex: number }) {
 function StatCard({ label, value, tone = "neutral" }: { label: string; tone?: "neutral" | "good" | "warning" | "danger"; value: string | number }) {
   const toneClass = {
     neutral: "bg-surface text-ink",
-    good: "bg-leaf/10 text-ink",
-    warning: "bg-amber/15 text-ink",
-    danger: "bg-coral/10 text-ink"
+    good: "bg-success/10 text-ink",
+    warning: "bg-warning/15 text-ink",
+    danger: "bg-danger/10 text-ink"
   };
   return (
     <div className={`rounded-app border border-line p-3 shadow-sm ${toneClass[tone]}`}>
@@ -246,7 +246,7 @@ export default function ImportarPage() {
     <Shell>
       <div className="mx-auto max-w-6xl px-4 py-5 sm:py-6">
         <PageHeader
-          description="Você pode enviar um arquivo CSV do seu banco. O Pulsa lê as movimentações, mostra uma prévia e você decide o que importar."
+          description="Você pode enviar um arquivo CSV do seu banco. O Trevo lê as movimentações, mostra uma prévia e você decide o que importar."
           helpText="Importe um extrato em CSV para cadastrar movimentações mais rápido. Você revisa tudo antes de confirmar."
           icon={FileUp}
           title="Importe seu extrato para cadastrar movimentações mais rápido."
@@ -259,7 +259,7 @@ export default function ImportarPage() {
             "Movimentações repetidas são detectadas automaticamente."
           ].map((notice) => (
             <div className="flex gap-3 rounded-app border border-line bg-surface/90 p-3 text-sm shadow-sm" key={notice}>
-              <ShieldCheck className="mt-0.5 shrink-0 text-pulse" size={18} aria-hidden />
+              <ShieldCheck className="mt-0.5 shrink-0 text-leaf" size={18} aria-hidden />
               <span>{notice}</span>
             </div>
           ))}
@@ -280,7 +280,7 @@ export default function ImportarPage() {
             {!upload && !importResult ? (
               <EmptyState
                 title="Envie um arquivo .CSV para começar."
-                description="Depois do envio, o Pulsa mostra as colunas encontradas e guia você pelo mapeamento."
+                description="Depois do envio, o Trevo mostra as colunas encontradas e guia você pelo mapeamento."
                 actionLabel={busyState === "upload" ? "Enviando..." : "Selecionar arquivo CSV"}
                 onAction={() => fileInputRef.current?.click()}
                 icon={FileSpreadsheet}
@@ -288,7 +288,7 @@ export default function ImportarPage() {
             ) : null}
 
             {!upload && importResult ? (
-              <div className="rounded-app border border-leaf/25 bg-leaf/10 p-4 text-sm">
+              <div className="rounded-app border border-success/25 bg-success/10 p-4 text-sm">
                 <strong className="block text-ink">Importação concluída.</strong>
                 <p className="mt-1 text-muted">As movimentações importadas aparecem na etapa de categorização. Você pode selecionar outro CSV quando quiser.</p>
                 <button className="btn-secondary mt-4" type="button" onClick={() => fileInputRef.current?.click()}>
@@ -331,7 +331,7 @@ export default function ImportarPage() {
             <SectionIntro
               title="2. Mapear colunas"
               description="Escolha quais colunas do arquivo representam data, descrição e valor."
-              helpText="Tipo é opcional. Quando não houver coluna de tipo, o Pulsa tenta inferir entrada ou despesa pelo valor."
+              helpText="Tipo é opcional. Quando não houver coluna de tipo, o Trevo tenta inferir entrada ou despesa pelo valor."
             />
 
             {upload ? (
@@ -379,7 +379,7 @@ export default function ImportarPage() {
                           <strong className="block truncate text-sm">{row.title}</strong>
                           <span className="text-xs text-muted">{row.transactionDate} / mês {row.detectedMonth || row.transactionDate.slice(0, 7)} / linha {row.line} / {row.type === "income" ? "Entrada" : "Despesa"}</span>
                         </div>
-                        <span className={row.type === "income" ? "font-semibold text-leaf" : "font-semibold text-coral"}>{formatBRL(row.amount)}</span>
+                        <span className={row.type === "income" ? "font-semibold text-success" : "font-semibold text-danger"}>{formatBRL(row.amount)}</span>
                       </div>
                     ))}
                     {!preview.preview.length ? <p className="p-3 text-sm text-muted">Nenhuma linha válida encontrada.</p> : null}
@@ -389,12 +389,12 @@ export default function ImportarPage() {
                 <div className="grid gap-3">
                   <div className="rounded-app border border-line bg-surface p-3">
                     <h3 className="flex items-center gap-2 text-sm font-semibold">
-                      <AlertTriangle size={16} className="text-amber" aria-hidden />
+                      <AlertTriangle size={16} className="text-warning" aria-hidden />
                       Linhas com erro
                     </h3>
                     <div className="mt-2 space-y-2">
                       {preview.errors.map((error) => (
-                        <p key={`${error.line}-${error.detail}`} className="rounded-app bg-coral/10 p-2 text-sm text-coral">Linha {error.line}: {error.detail}</p>
+                        <p key={`${error.line}-${error.detail}`} className="rounded-app bg-danger/10 p-2 text-sm text-danger">Linha {error.line}: {error.detail}</p>
                       ))}
                       {!preview.errors.length ? <p className="text-sm text-muted">Nenhum erro encontrado.</p> : null}
                     </div>
@@ -404,7 +404,7 @@ export default function ImportarPage() {
                     <h3 className="text-sm font-semibold">Duplicatas detectadas</h3>
                     <div className="mt-2 space-y-2">
                       {preview.duplicates.map((row) => (
-                        <p key={row.duplicateHash} className="rounded-app bg-amber/15 p-2 text-sm">Linha {row.line}: {row.title}</p>
+                        <p key={row.duplicateHash} className="rounded-app bg-warning/15 p-2 text-sm">Linha {row.line}: {row.title}</p>
                       ))}
                       {!preview.duplicates.length ? <p className="text-sm text-muted">Nenhuma movimentação repetida encontrada.</p> : null}
                     </div>
@@ -416,7 +416,7 @@ export default function ImportarPage() {
                 <button className="btn-primary" type="button" onClick={() => handleConfirm().catch(console.error)} disabled={busyState === "confirm" || importableRows <= 0}>
                   {busyState === "confirm" ? "Importando..." : "Confirmar importação"}
                 </button>
-                <p className="text-sm text-muted">O Pulsa vai ignorar duplicatas e linhas inválidas.</p>
+                <p className="text-sm text-muted">O Trevo vai ignorar duplicatas e linhas inválidas.</p>
               </div>
             </>
           ) : (
@@ -435,7 +435,7 @@ export default function ImportarPage() {
             title="5. Categorizar"
             description="Depois da importação, revise as movimentações criadas e crie regras para acelerar próximas importações."
             helpText="A automação por regras já vale para próximas importações. Sugestões inteligentes por similaridade ficam preparadas como melhoria futura."
-            action={<Wand2 size={18} className="text-pulse" aria-hidden />}
+            action={<Wand2 size={18} className="text-leaf" aria-hidden />}
           />
 
           {importResult ? (

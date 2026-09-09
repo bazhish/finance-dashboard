@@ -6,17 +6,17 @@ type KpiCardProps = {
 };
 
 const toneClass = {
-  neutral: "border-line from-surface to-sky/10",
-  good: "border-leaf/25 from-surface to-leaf/15",
-  warning: "border-amber/35 from-surface to-amber/20",
-  danger: "border-coral/30 from-surface to-coral/15"
+  neutral: "border-line from-surface to-info/10",
+  good: "border-success/25 from-surface to-success/15",
+  warning: "border-warning/35 from-surface to-warning/20",
+  danger: "border-danger/30 from-surface to-danger/15"
 };
 
 const markerClass = {
-  neutral: "bg-sky",
-  good: "bg-leaf",
-  warning: "bg-amber",
-  danger: "bg-coral"
+  neutral: "bg-info",
+  good: "bg-success",
+  warning: "bg-warning",
+  danger: "bg-danger"
 };
 
 export function KpiCard({ label, value, note, tone = "neutral" }: KpiCardProps) {

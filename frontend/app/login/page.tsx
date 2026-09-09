@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
-import { ArrowRight, Moon, Sun } from "lucide-react";
+import { ArrowRight, Moon, Sun } from "@/components/icons";
 import { api } from "@/lib/api";
 import { COOKIE_AUTH_TOKEN, rememberSession } from "@/lib/authSession";
 import { useTheme } from "@/lib/theme";
@@ -84,9 +84,9 @@ export default function LoginPage() {
 
         <section className="order-1 mx-auto w-full max-w-md p-5 lg:order-2 lg:p-7">
           <form onSubmit={handleSubmit}>
-            <p className="text-sm font-bold text-pulse">Entre no Pulsa</p>
-            <h1 className="mt-1 text-2xl font-black leading-tight text-ink">Acompanhe o pulso do seu mês</h1>
-            <p className="mt-2 text-sm text-muted">Saiba quanto pode gastar hoje e mantenha metas no ritmo certo.</p>
+            <p className="text-sm font-bold text-leaf">Entre no Trevo</p>
+            <h1 className="mt-1 text-2xl font-black leading-tight text-ink">Seu mês inteiro em uma tela</h1>
+            <p className="mt-2 text-sm text-muted">Saiba quanto pode gastar hoje e feche o mês no azul.</p>
 
             <label className="mt-5 block text-sm font-semibold text-ink">
               E-mail
@@ -97,7 +97,7 @@ export default function LoginPage() {
               <input className="field mt-1" name="password" type="password" autoComplete="current-password" required />
             </label>
 
-            {error ? <p className="mt-3 rounded-app bg-coral/10 p-3 text-sm text-coral">{error}</p> : null}
+            {error ? <p className="mt-3 rounded-app bg-danger/10 p-3 text-sm text-danger">{error}</p> : null}
 
             <button className="btn-primary mt-5 w-full" type="submit">
               Entrar
@@ -106,7 +106,7 @@ export default function LoginPage() {
 
             <SocialLoginButtons mode="login" />
 
-            <Link className="mt-4 block text-center text-sm font-bold text-plum" href="/cadastro">
+            <Link className="mt-4 block text-center text-sm font-bold text-leaf-700" href="/cadastro">
               Criar conta gratuita
             </Link>
           </form>

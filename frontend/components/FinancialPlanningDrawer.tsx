@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { WalletCards, X } from "lucide-react";
+import { WalletCards, X } from "@/components/icons";
 import { MoneyInput } from "@/components/MoneyInput";
 import { useDelayedPresence } from "@/lib/useDelayedPresence";
 import type { Settings } from "@/types/finance";
@@ -59,7 +59,7 @@ export function FinancialPlanningDrawer({ open, settings, onClose, onSave }: Fin
       <div className={`theme-surface absolute inset-x-0 bottom-0 max-h-[92vh] overflow-y-auto rounded-t-app border p-4 shadow-lift sm:left-auto sm:right-4 sm:top-4 sm:h-[calc(100vh-2rem)] sm:w-[420px] sm:rounded-app ${state === "open" ? "animate-pop-in" : "animate-pop-out"}`}>
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <p className="flex items-center gap-2 text-sm font-semibold text-pulse">
+            <p className="flex items-center gap-2 text-sm font-semibold text-leaf">
               <WalletCards size={18} />
               Ajustes rápidos
             </p>

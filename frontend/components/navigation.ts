@@ -1,10 +1,10 @@
-import type { LucideIcon } from "lucide-react";
-import { CalendarDays, FileText, Home, Layers3, PiggyBank, ReceiptText, Settings, Upload, UserRound } from "lucide-react";
+import type { TrevoIcon } from "@/components/icons";
+import { CalendarDays, FileText, Home, Layers3, PiggyBank, ReceiptText, Settings, Upload, UserRound } from "@/components/icons";
 
 export type NavItem = {
   href: string;
   label: string;
-  icon: LucideIcon;
+  icon: TrevoIcon;
 };
 
 export const mainNavItems: NavItem[] = [

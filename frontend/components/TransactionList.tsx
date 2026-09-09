@@ -1,7 +1,7 @@
 import type { Transaction } from "@/types/finance";
 import { formatBRL } from "@/lib/format";
 import { EmptyState } from "@/components/EmptyState";
-import { ReceiptText } from "lucide-react";
+import { ReceiptText } from "@/components/icons";
 
 export function TransactionList({ items }: { items: Transaction[] }) {
   if (!items.length) {
@@ -26,7 +26,7 @@ export function TransactionList({ items }: { items: Transaction[] }) {
               {item.type === "income" ? "Entrada" : "Despesa"} / {item.transaction_date} / {item.category_name || "Sem categoria"}
             </small>
           </div>
-          <span className={item.type === "income" ? "whitespace-nowrap font-semibold text-leaf" : "whitespace-nowrap font-semibold text-coral"}>
+          <span className={item.type === "income" ? "whitespace-nowrap font-semibold text-success" : "whitespace-nowrap font-semibold text-danger"}>
             {item.type === "income" ? "+" : "-"}
             {formatBRL(item.amount)}
           </span>

@@ -27,5 +27,5 @@ Componentes:
 
 Identidade:
 
-- O app usa o nome `Pulsa` e um monograma simples `P`.
+- O app usa o nome `Trevo` e um monograma simples `P`.
 - Evitar imagens de logo no shell, login e header; preferir texto e o monograma tipografico.
