@@ -13,7 +13,7 @@ pytestmark = pytest.mark.skipif(not TEST_DB_URL, reason="TEST_DATABASE_URL is no
 @pytest.mark.asyncio
 async def test_register_creates_user(client):
     email = f"new-{uuid.uuid4().hex}@example.test"
-    response = await client.post("/api/auth/register", json={"name": "Teste", "email": email, "password": "Senha123"})
+    response = await client.post("/api/auth/register", json={"name": "Teste", "email": email, "password": "Senha123", "accept_terms": True})
     assert response.status_code == 201
     assert "access_token" in response.json()
 
@@ -22,7 +22,7 @@ async def test_register_creates_user(client):
 async def test_register_duplicate_email(client):
     email = f"dupe-{uuid.uuid4().hex}@example.test"
     await register_user(client, email)
-    response = await client.post("/api/auth/register", json={"name": "Teste", "email": email, "password": "Senha123"})
+    response = await client.post("/api/auth/register", json={"name": "Teste", "email": email, "password": "Senha123", "accept_terms": True})
     assert response.status_code == 400
 
 

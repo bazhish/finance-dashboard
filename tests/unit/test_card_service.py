@@ -7,7 +7,12 @@ import app.main as main_module
 from app.main import enforce_card_pin_rate_limit, record_card_pin_failure
 
 
-def test_pin_rate_limit_blocks_after_max_attempts():
+def test_pin_rate_limit_blocks_after_max_attempts(monkeypatch):
+    # Teste de unidade da contagem em memória: sem o patch, `record_card_pin_failure`
+    # tenta persistir em card_pin_failures_state e o usuário fictício viola a
+    # foreign key para users. O caminho persistido é coberto pelos testes de
+    # integração, que criam usuário e cartão de verdade.
+    monkeypatch.setattr(main_module, "storage_available", lambda: False)
     main_module.card_pin_failures.clear()
     user_id = "00000000-0000-0000-0000-000000000001"
     card_id = 99

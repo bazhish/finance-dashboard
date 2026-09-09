@@ -101,7 +101,7 @@ async def clean_db(ensure_schema):
 @pytest_asyncio.fixture
 async def auth_headers(client):
     email = f"user-{uuid.uuid4().hex}@example.test"
-    payload = {"name": "Teste", "email": email, "password": "Senha123"}
+    payload = {"name": "Teste", "email": email, "password": "Senha123", "accept_terms": True}
     response = await client.post("/api/auth/register", json=payload)
     assert response.status_code == 201, response.text
     token = response.json()["access_token"]
@@ -110,7 +110,7 @@ async def auth_headers(client):
 
 async def register_user(client, email: str | None = None) -> dict:
     email = email or f"user-{uuid.uuid4().hex}@example.test"
-    payload = {"name": "Teste", "email": email, "password": "Senha123"}
+    payload = {"name": "Teste", "email": email, "password": "Senha123", "accept_terms": True}
     response = await client.post("/api/auth/register", json=payload)
     assert response.status_code == 201, response.text
     return {"email": email, "token": response.json()["access_token"]}
